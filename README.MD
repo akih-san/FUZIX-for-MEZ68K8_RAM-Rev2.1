@@ -2,8 +2,8 @@
 
 # MEZ68K_RAM Rev2.1 for FUZIX
 
-MEZ68K_RAM Rev2.1はEMUZ80ボード上で動く68008メザニンボードです。
-[EMUZ80](https://vintagechips.wordpress.com/2022/03/05/emuz80_reference/)
+MEZ68K_RAM Rev2.1は[EMUZ80](https://vintagechips.wordpress.com/2022/03/05/emuz80_reference/)ボード上で動く68008メザニンボードです。
+
 
 EMUZ80はMicrochip社のPIC18F47Q43/83/84を使用して、Z80を制御するシングルボードコンピュータ
 です。また、Z80の代わりにメザニンボードを装着することで、レガシーCPU（6502や、8088、V20、他）
