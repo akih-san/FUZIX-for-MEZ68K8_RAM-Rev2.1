@@ -1,0 +1,19 @@
+MEZ68K_RAM Rev2.1 for FUZIX
+
+MEZ68K_RAM Rev2.1はEMUZ80ボード上で動く68008メザニンボードです。
+EMUZ80(https://vintagechips.wordpress.com/2022/03/05/emuz80_reference/)
+
+EMUZ80はMicrochip社のPIC18F47Q43/83/84を使用して、Z80を制御するシングルボードコンピュータ
+です。また、Z80の代わりにメザニンボードを装着することで、レガシーCPU（6502や、8088、V20、他）
+を動かすことが出来ます。
+UART, SPI, I2C等の制御をPICで行い、レガシーCPUの外部I/Oとして機能を提供します。
+SDカードはSPIを通して実装されています。
+
+PICから、レガシーCPUのメモリ空間にアクセスすることで、レガシーPCのプログラムをロードする
+ことが出来るため、ROMは必要なくSRAMでプログラムを動作させることが出来ます。
+
+MEZ68K_RAM Rev2.1のFUZIX(https://www.fuzix.org/)は、platform-pico68kをベースにポーティングを行いました。
+pico68k(https://hackaday.io/project/179200-68000-minimal-homebrew-computer)
+
+リアルタイムクロックは、platfoem-68knanoのds3234デバイスの実装を参考にしています。
+68knano(https://github.com/74hc595/68k-nano)
