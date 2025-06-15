@@ -17,5 +17,5 @@ PICから、レガシーCPUのメモリ空間にアクセスすることで、�
 MEZ68K_RAM Rev2.1の[FUZIX](https://www.fuzix.org/)は、platform-[pico68k](https://hackaday.io/project/179200-68000-minimal-homebrew-computer)をベースにポーティングを行いました。
 
 
-リアルタイムクロックは、platfoem-68knanoのds3234デバイスの実装を参考にしています。
-68knano(https://github.com/74hc595/68k-nano)
+リアルタイムクロックは、platfoem-[68knano](https://github.com/74hc595/68k-nano)のds3234デバイスの実装を参考にしています。
+
