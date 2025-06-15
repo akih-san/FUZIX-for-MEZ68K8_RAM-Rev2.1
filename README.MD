@@ -14,8 +14,8 @@ SDカードはSPIを通して実装されています。
 PICから、レガシーCPUのメモリ空間にアクセスすることで、レガシーPCのプログラムをロードする
 ことが出来るため、ROMは必要なくSRAMでプログラムを動作させることが出来ます。
 
-MEZ68K_RAM Rev2.1のFUZIX(https://www.fuzix.org/)は、platform-pico68kをベースにポーティングを行いました。
-pico68k(https://hackaday.io/project/179200-68000-minimal-homebrew-computer)
+MEZ68K_RAM Rev2.1の[FUZIX](https://www.fuzix.org/)は、platform-[pico68k](https://hackaday.io/project/179200-68000-minimal-homebrew-computer)をベースにポーティングを行いました。
+
 
 リアルタイムクロックは、platfoem-68knanoのds3234デバイスの実装を参考にしています。
 68knano(https://github.com/74hc595/68k-nano)
