@@ -1,3 +1,4 @@
+ー　工事中　（Under construction）ー
 MEZ68K_RAM Rev2.1 for FUZIX
 
 MEZ68K_RAM Rev2.1はEMUZ80ボード上で動く68008メザニンボードです。
