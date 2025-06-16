@@ -105,7 +105,9 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
 ・BASIC68K.BIN	（スタンドアロン版BASIC）<br>
 ・UMON_68K.BIN	（ユニバーサルモニタ）<br>
-<br>
 
 
-#　FUZIXの移植手順
+
+#　FUZIX 0.5の移植手順
+
+platform-mez68k-ram
