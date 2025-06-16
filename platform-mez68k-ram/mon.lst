@@ -1,0 +1,2380 @@
+68K GAS  mon.S 			page 1
+
+
+   1               	/*
+   2               	;;;
+   3               	;;; Universal Monitor 68000
+   4               	;;;   Copyright (C) 2021 Haruo Asano
+   5               	;;;
+   6               	;
+   7               	;	page 0
+   8               	;	CPU	68000
+   9               	;	SUPMODE	ON
+  10               	*/
+  11               	
+  12               		.globl	INIVEC
+  13               		.globl	UREQ_COM
+  14               		.globl	UNI_CHR
+  15               		.globl	STR_addr
+  16               		.globl	CREQ_COM
+  17               		.globl	CBI_CHR
+  18               		.globl	disk_drive
+  19               		.globl	disk_track
+  20               		.globl	disk_sector
+  21               		.globl	data_dma
+  22               		.globl	crd_cnt
+  23               		.globl	crd_rp
+  24               		.globl	crd_wp
+  25               		.globl	contmp_buf
+  26               		.globl	crd_buf
+  27               		.globl	INIT
+  28               		.globl	CSTART
+  29               		.globl	WSTART
+  30               		.globl	DUMP
+  31               		.globl	GO
+  32               		.globl	SETM
+  33               		.globl	LOADH
+  34               		.globl	SAVEH
+  35               		.globl	REG
+  36               		.globl	STROUT
+  37               		.globl	HEXOUT8
+  38               		.globl	HEXOUT4
+  39               		.globl	HEXOUT2
+  40               		.globl	HEXOUT1
+  41               		.globl	CRLF
+  42               		.globl	GETLIN
+  43               		.globl	IRQ5_H
+  44               		.globl	DUMMY_H
+  45               		.globl	NMI_H
+  46               	
+  47               	.mri 1
+  48               	;;;
+  49               	;;; Memory
+  50               	;;;
+  51               	
+  52               	VECT_T:	EQU	$00000000
+  53               	PROG_B:	EQU	$00000400
+  54               	SHAD_M: EQU	$100		;PIC <-> 68008 Shared Memory
+  55               	
+  56               	BUFLEN:	EQU	24		; Input buffer size
+  57               	VECSIZ:	EQU	256		; Number of vectors to be initialized
+68K GAS  mon.S 			page 2
+
+
+  58               	
+  59               	MPU_SPEC	equ	0	; MPU Spec. (Effective when USE_IDENT=0) 0:MC68000/8 1:MC68010
+  60               	
+  61               	;;;
+  62               	;;; Common header file
+  63               	;;;
+  64               	
+  65               	;;; Constants
+  66               	CR:	EQU	$0D
+  67               	LF:	EQU	$0A
+  68               	BS:	EQU	$08
+  69               	DEL:	EQU	$7F
+  70               	
+  71               	START_FUZIX	equ	$2004
+  72               	
+  73               	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  74               	;
+  75               	; define Vecter table
+  76               	;
+  77               	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  78               	;
+  79               	;	ORG	VECT_T
+  80               	
+  81               	;sys_base	equ	$10008
+  82               	sys_base	equ	$2008
+  83               	
+  84               	spurious	equ	sys_base
+  85               	unexpected	equ	sys_base+6
+  86               	bus		equ	sys_base+12
+  87               	addr		equ	sys_base+18
+  88               	illegal		equ	sys_base+24
+  89               	divzero		equ	sys_base+30
+  90               	chk		equ	sys_base+36
+  91               	trapv		equ	sys_base+42
+  92               	priv		equ	sys_base+48
+  93               	trace		equ	sys_base+54
+  94               	unimpa		equ	sys_base+60
+  95               	unimpf		equ	sys_base+66
+  96               	uninit		equ	sys_base+72
+  97               	interrupt	equ	sys_base+78
+  98               	trap0		equ	sys_base+84
+  99               	trap1		equ	sys_base+90
+ 100               	trap2		equ	sys_base+96
+ 101               	trap3		equ	sys_base+102
+ 102               	trap4		equ	sys_base+108
+ 103               	trap5		equ	sys_base+114
+ 104               	trap6		equ	sys_base+120
+ 105               	trap7		equ	sys_base+126
+ 106               	trap8		equ	sys_base+132
+ 107               	trap9		equ	sys_base+138
+ 108               	trap10		equ	sys_base+144
+ 109               	trap11		equ	sys_base+150
+ 110               	trap12		equ	sys_base+156
+ 111               	trap13		equ	sys_base+162
+ 112               	trap14		equ	sys_base+168
+ 113               	trap15		equ	sys_base+174
+ 114               	
+68K GAS  mon.S 			page 3
+
+
+ 115               	INIVEC:
+ 116               		;; 0-7
+ 117 0000 0000 0000 		DC.L	STACK		; Reset: Initial SSP
+ 118 0004 0000 0000 		DC.L	CSTART		; Reset: Initial PC
+ 119               	
+ 120 0008 0000 2014 		long	bus
+ 121 000c 0000 201A 		long	addr
+ 122 0010 0000 2020 		long	illegal
+ 123 0014 0000 2026 		long	divzero
+ 124 0018 0000 202C 		long	chk
+ 125 001c 0000 2032 		long	trapv
+ 126 0020 0000 2038 		long	priv
+ 127 0024 0000 203E 		long	trace
+ 128 0028 0000 2044 		long	unimpa
+ 129 002c 0000 204A 		long	unimpf
+ 130 0030 0000 200E 		long	unexpected
+ 131 0034 0000 200E 		long	unexpected
+ 132 0038 0000 200E 		long	unexpected
+ 133 003c 0000 2050 		long	uninit
+ 134               		; 16-23 unused
+ 135 0040 0000 200E 		long	unexpected
+ 136 0044 0000 200E 		long	unexpected
+ 137 0048 0000 200E 		long	unexpected
+ 138 004c 0000 200E 		long	unexpected
+ 139 0050 0000 200E 		long	unexpected
+ 140 0054 0000 200E 		long	unexpected
+ 141 0058 0000 200E 		long	unexpected
+ 142 005c 0000 200E 		long	unexpected
+ 143               		; 24
+ 144 0060 0000 2008 		long	spurious
+ 145 0064 0000 200E 		long	unexpected
+ 146 0068 0000 200E 		long	unexpected
+ 147 006c 0000 200E 		long	unexpected
+ 148 0070 0000 200E 		long	unexpected
+ 149 0074 0000 0000 		long	IRQ5_H		; Level 5 Interrupt Autovector
+ 150 0078 0000 200E 		long	unexpected
+ 151 007c 0000 0000 		long	NMI_H		; Level 7 Interrupt Autovector
+ 152               		; 32 - TRAP #n
+ 153 0080 0000 205C 		long	trap0
+ 154 0084 0000 2062 		long	trap1
+ 155 0088 0000 2068 		long	trap2
+ 156 008c 0000 206E 		long	trap3
+ 157 0090 0000 2074 		long	trap4
+ 158 0094 0000 207A 		long	trap5
+ 159 0098 0000 2080 		long	trap6
+ 160 009c 0000 2086 		long	trap7
+ 161 00a0 0000 208C 		long	trap8
+ 162 00a4 0000 2092 		long	trap9
+ 163 00a8 0000 2098 		long	trap10
+ 164 00ac 0000 209E 		long	trap11
+ 165 00b0 0000 20A4 		long	trap12			; System call
+ 166 00b4 0000 20AA 		long	trap13
+ 167 00b8 0000 20B0 		long	trap14
+ 168 00bc 0000 20B6 		long	trap15
+ 169               	
+ 170               	INIVECE:
+ 171               	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+68K GAS  mon.S 			page 4
+
+
+ 172               	;
+ 173               	; define shared memory area
+ 174               	;
+ 175               	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 176               	;	ORG	SHAD_M
+ 177               	
+ 178 00c0 0000 0000 		ds.b	$40
+ 178      0000 0000 
+ 178      0000 0000 
+ 178      0000 0000 
+ 178      0000 0000 
+ 179               	
+ 180               	;----------------------------------------------------------------------------------
+ 181               	; request command to PIC
+ 182               	;----------------------------------------------------------------------------------
+ 183               	REQ_CONIN:	equ	1		; return char in UNI_CHR
+ 184               	REQ_CONOUT	equ	2		; UNI_CHR = output char
+ 185               	REQ_CONST:	equ	3		; return status in UNI_CHR( 0: no key, 1 : key exist )
+ 186               	REQ_STROUT	equ	4		; string output to console
+ 187               						; UNI_CHR or CBI_CHR = string size.
+ 188               						; STR_addr or data_dma = string address
+ 189               	REQ_CONIN1:	equ	9		; return char,(null char is no key)
+ 190               	REQ_CONOUT1:	equ	10		; return status,(0:output OK, 1:console busy)
+ 191               	REQ_STRIN	equ	11
+ 192               	REQ_CLR_IRQ:	equ	12		; clear IRQ interrupt request
+ 193               	
+ 194               	PIC_REQ:	equ	$80000		;A19 = 1
+ 195               	
+ 196               	;			   ; offset:
+ 197 0100 00        	UREQ_COM:	DS.B	1	; 0: monitor CONIN/CONOUT request command
+ 198 0101 00        	UNI_CHR:	DS.B	1	; 1: charcter (CONIN/CONOUT) or number of strings
+ 199 0102 0000 0000 	STR_addr	DS.L	1	; 2: string address
+ 200               	;--------------------------------------------------------------------------------
+ 201 0106 00        	CREQ_COM:	DS.B	1	; 6: PIC function CONIN/CONOUT request command
+ 202 0107 00        	CBI_CHR:	DS.B	1	; 7: charcter or return status
+ 203 0108 00        	disk_drive:	DS.B	1	; 8
+ 204 0109 00        	blocks		DS.B	1	; 9
+ 205 010a 0000 0000 	lba:		DS.L	1	; A,B,C,D
+ 206 010e 0000 0000 	dma:		DS.L	1	; E,F,10,11
+ 207               	
+ 208 0112 00        	crd_cnt:	ds.b	1
+ 209 0113 00        	crd_rp:		ds.b	1
+ 210 0114 00        	crd_wp:		ds.b	1
+ 211 0115 00        	irq5_flg:	ds.b	1
+ 212               	req_e:
+ 213               	
+ 214               	;	org	(req_e+$80) & $ff80
+ 215 0116 0000 0000 		ds.b	((req_e+$80)&$ff80)-req_e
+ 215      0000 0000 
+ 215      0000 0000 
+ 215      0000 0000 
+ 215      0000 0000 
+ 216               	
+ 217               	con_size:	equ	128
+ 218 0180 0000 0000 	contmp_buf:	ds.b	con_size	; tmp string buffer
+ 218      0000 0000 
+ 218      0000 0000 
+68K GAS  mon.S 			page 5
+
+
+ 218      0000 0000 
+ 218      0000 0000 
+ 219 0200 0000 0000 	crd_buf:	ds.b	con_size	; console input buffer
+ 219      0000 0000 
+ 219      0000 0000 
+ 219      0000 0000 
+ 219      0000 0000 
+ 220               	
+ 221               	shm_end:
+ 222               	
+ 223               	;
+ 224               	; tty input output entry
+ 225               	;
+ 226 0280 4EFA 0F9C 	ttyin_st:	jmp	con_st
+ 227 0284 4EFA 0F9E 	tty_in:		jmp	con_in
+ 228 0288 4EFA 0FD2 	tty_out:	jmp	con_out
+ 229               	
+ 230               	entp_end:
+ 231               	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 232               	;
+ 233               	; unimon program
+ 234               	;
+ 235               	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 236               	;	ORG	$400
+ 237               	;	ORG	PROG_B
+ 238               	;	ds.b	$180
+ 239 028c 0000 0000 		ds.b	((entp_end+$180)&$ff80)-entp_end
+ 239      0000 0000 
+ 239      0000 0000 
+ 239      0000 0000 
+ 239      0000 0000 
+ 240               	
+ 241               	CSTART:
+ 242 0400 6100 0E0C 		BSR	INIT
+ 243               	
+ 244 0404 203C 0000 		MOVE.L	#DAT_E,D0
+ 244      0000 
+ 245               	
+ 246 040a 23C0 0000 		MOVE.L	D0,DSADDR
+ 246      0000 
+ 247 0410 23C0 0000 		MOVE.L	D0,GADDR
+ 247      0000 
+ 248 0416 23C0 0000 		MOVE.L	D0,SADDR
+ 248      0000 
+ 249 041c 13FC 0053 		MOVE.B	#'S',HEXMOD
+ 249      0000 0000 
+ 250 0424 13FC 0000 		MOVE.B	#MPU_SPEC,PSPEC
+ 250      0000 0000 
+ 251               	
+ 252               		;; Initialize register save area
+ 253 042c 41FA 0EB0 		LEA	REG_B,A0
+ 254 0430 303C 00A5 		MOVE	#(REG_E-REG_B)-1,D0
+ 255               	INIR0:
+ 256 0434 4218      		CLR.B	(A0)+
+ 257 0436 51C8 FFFC 		DBF	D0,INIR0
+ 258 043a 23FC 0000 		MOVE.L	#STACK,REGSSP
+ 258      0000 0000 
+68K GAS  mon.S 			page 6
+
+
+ 258      0000 
+ 259 0444 23FC 0000 		MOVE.L	#DAT_E,REGPC
+ 259      0000 0000 
+ 259      0000 
+ 260 044e 23FC 0000 		MOVE.L	#USTACK,REGA7
+ 260      0000 0000 
+ 260      0000 
+ 261               		
+ 262 0458 4EF8 2004 		jmp	START_FUZIX
+ 263               		
+ 264               	WSTART:
+ 265               	
+ 266               		; set interrupt level 4
+ 267               	
+ 268 045c 4FFA 10A2 		lea	STACK,a7
+ 269 0460 46FC 2400 		move.w	#$2400,sr
+ 270               		
+ 271 0464 13FC 0001 		move.b	#1,irq5_flg	;set FUZIX bypass flag
+ 271      0000 0000 
+ 272 046c 41FA 08EC 		LEA	PROMPT,A0
+ 273 0470 6100 060E 		BSR	STROUT
+ 274 0474 6100 069E 		BSR	GETLIN
+ 275 0478 41FA 0E36 		LEA	INBUF,A0
+ 276 047c 6100 0714 		BSR	SKIPSP
+ 277 0480 1010      		MOVE.B	(A0),D0
+ 278 0482 6100 071A 		BSR	UPPER
+ 279 0486 4A00      		TST.B	D0
+ 280 0488 6700 FFD2 		BEQ	WSTART
+ 281               	
+ 282 048c 0C00 0044 		CMP.B	#'D',D0
+ 283 0490 6700 0036 		BEQ	DUMP
+ 284 0494 0C00 0047 		CMP.B	#'G',D0
+ 285 0498 6700 0186 		BEQ	GO
+ 286 049c 0C00 0053 		CMP.B	#'S',D0
+ 287 04a0 6700 01C2 		BEQ	SETM
+ 288               	
+ 289 04a4 0C00 004C 		CMP.B	#'L',D0
+ 290 04a8 6700 0250 		BEQ	LOADH
+ 291 04ac 0C00 0050 		CMP.B	#'P',D0
+ 292 04b0 6700 0372 		BEQ	SAVEH
+ 293               	
+ 294 04b4 0C00 0052 		CMP.B	#'R',D0
+ 295 04b8 6700 048C 		BEQ	REG
+ 296               	ERR:
+ 297 04bc 41FA 08BC 		LEA	ERRMSG,A0
+ 298 04c0 6100 05BE 		BSR	STROUT
+ 299 04c4 6000 FF96 		BRA	WSTART
+ 300               	
+ 301               	;;;
+ 302               	;;; Dump memory
+ 303               	;;;
+ 304               	
+ 305               	DUMP:
+ 306 04c8 5248      		ADDQ	#1,A0
+ 307 04ca 6100 06C6 		BSR	SKIPSP
+ 308 04ce 6100 06E4 		BSR	RDHEX		; 1st arg.
+ 309 04d2 4A42      		TST	D2
+68K GAS  mon.S 			page 7
+
+
+ 310 04d4 6600 0020 		BNE	DP0
+ 311               		;; No arg.
+ 312 04d8 6100 06B8 		BSR	SKIPSP
+ 313 04dc 4A10      		TST.B	(A0)
+ 314 04de 6600 FFDC 		BNE	ERR
+ 315 04e2 203A 0DE4 		MOVE.L	DSADDR,D0
+ 316 04e6 0680 0000 		ADD.L	#128,D0
+ 316      0080 
+ 317 04ec 23C0 0000 		MOVE.L	D0,DEADDR
+ 317      0000 
+ 318 04f2 6000 004C 		BRA	DPM
+ 319               	
+ 320               		;; 1st arg. found
+ 321               	DP0:
+ 322 04f6 23C1 0000 		MOVE.L	D1,DSADDR
+ 322      0000 
+ 323 04fc 6100 0694 		BSR	SKIPSP
+ 324 0500 0C10 002C 		CMP.B	#',',(A0)
+ 325 0504 6700 0018 		BEQ	DP1
+ 326 0508 4A10      		TST.B	(A0)
+ 327 050a 6600 FFB0 		BNE	ERR
+ 328               		;; No 2nd arg.
+ 329 050e 0681 0000 		ADD.L	#128,D1
+ 329      0080 
+ 330 0514 23C1 0000 		MOVE.L	D1,DEADDR
+ 330      0000 
+ 331 051a 6000 0024 		BRA	DPM
+ 332               	
+ 333               	DP1:
+ 334 051e 5248      		ADDQ	#1,A0
+ 335 0520 6100 0670 		BSR	SKIPSP
+ 336 0524 6100 068E 		BSR	RDHEX
+ 337 0528 6100 0668 		BSR	SKIPSP
+ 338 052c 4A42      		TST	D2
+ 339 052e 6700 FF8C 		BEQ	ERR
+ 340 0532 4A10      		TST.B	(A0)
+ 341 0534 6600 FF86 		BNE	ERR
+ 342 0538 5281      		ADDQ.L	#1,D1
+ 343 053a 23C1 0000 		MOVE.L	D1,DEADDR
+ 343      0000 
+ 344               	
+ 345               		;; DUMP main
+ 346               	DPM:
+ 347 0540 203A 0D86 		MOVE.L	DSADDR,D0
+ 348 0544 0200 00F0 		AND.B	#$F0,D0
+ 349 0548 2240      		MOVE.L	D0,A1
+ 350 054a 4242      		CLR	D2		; DSTATE
+ 351               	DPM0:
+ 352 054c 6100 002E 		BSR	DPL
+ 353 0550 6100 0CCC 		BSR	con_st
+ 354 0554 4A00      		TST.B	D0
+ 355 0556 6600 0016 		BNE	DPM1
+ 356 055a 0C42 0002 		CMP	#2,D2		; DSTATE
+ 357 055e 6500 FFEC 		BCS	DPM0
+ 358 0562 23FA 0D68 		MOVE.L	DEADDR,DSADDR
+ 358      0000 0000 
+ 359 056a 6000 FEF0 		BRA	WSTART
+68K GAS  mon.S 			page 8
+
+
+ 360               	DPM1:
+ 361 056e 23C9 0000 		MOVE.L	A1,DSADDR
+ 361      0000 
+ 362 0574 6100 0CAE 		BSR	con_in
+ 363 0578 6000 FEE2 		BRA	WSTART
+ 364               	
+ 365               		;; DUMP line
+ 366               	DPL:
+ 367 057c 2009      		MOVE.L	A1,D0
+ 368 057e 6100 0512 		BSR	HEXOUT8
+ 369 0582 41FA 07FE 		LEA	DSEP0,A0
+ 370 0586 6100 04F8 		BSR	STROUT
+ 371 058a 45FA 0D24 		LEA	INBUF,A2
+ 372 058e 363C 000F 		MOVE	#15,D3
+ 373               	DPL0:
+ 374 0592 6100 0040 		BSR	DPB
+ 375 0596 51CB FFFA 		DBF	D3,DPL0
+ 376               	
+ 377 059a 41FA 07EA 		LEA	DSEP1,A0
+ 378 059e 6100 04E0 		BSR	STROUT
+ 379               	
+ 380 05a2 45FA 0D0C 		LEA	INBUF,A2
+ 381 05a6 363C 000F 		MOVE	#15,D3
+ 382               	DPL1:
+ 383 05aa 101A      		MOVE.B	(A2)+,D0
+ 384 05ac 0C00 0020 		CMP.B	#' ',D0
+ 385 05b0 6500 0012 		BCS	DPL2
+ 386 05b4 0C00 007F 		CMP.B	#$7F,D0
+ 387 05b8 6400 000A 		BCC	DPL2
+ 388 05bc 6100 0C9E 		BSR	con_out
+ 389 05c0 6000 000A 		BRA	DPL3
+ 390               	DPL2:
+ 391 05c4 103C 002E 		MOVE.B	#'.',D0
+ 392 05c8 6100 0C92 		BSR	con_out
+ 393               	DPL3:
+ 394 05cc 51CB FFDC 		DBF	D3,DPL1
+ 395 05d0 6000 0532 		BRA	CRLF
+ 396               	
+ 397               		;; DUMP byte
+ 398               	DPB:
+ 399 05d4 103C 0020 		MOVE.B	#' ',D0
+ 400 05d8 6100 0C82 		BSR	con_out
+ 401 05dc 4A42      		TST	D2		; DSTATE
+ 402 05de 6600 0020 		BNE	DPB2
+ 403               		;; Dump state 0
+ 404 05e2 B3FA 0CE4 		CMP.L	DSADDR,A1
+ 405 05e6 6700 0014 		BEQ	DPB1
+ 406               		;; Still 0 or 2
+ 407               	DPB0:
+ 408 05ea 103C 0020 		MOVE.B	#' ',D0
+ 409 05ee 6100 0C6C 		BSR	con_out
+ 410 05f2 6100 0C68 		BSR	con_out
+ 411 05f6 14C0      		MOVE.B	D0,(A2)+
+ 412 05f8 5249      		ADDQ	#1,A1
+ 413 05fa 4E75      		RTS
+ 414               		;; Found start address
+ 415               	DPB1:
+68K GAS  mon.S 			page 9
+
+
+ 416 05fc 343C 0001 		MOVE	#1,D2		; DSTATE
+ 417               	DPB2:
+ 418 0600 0C42 0001 		CMP	#1,D2		; DSTATE
+ 419 0604 6600 FFE4 		BNE	DPB0
+ 420               		;; Dump state 1
+ 421 0608 1019      		MOVE.B	(A1)+,D0
+ 422 060a 14C0      		MOVE.B	D0,(A2)+
+ 423 060c 6100 0498 		BSR	HEXOUT2
+ 424 0610 B3FA 0CBA 		CMP.L	DEADDR,A1
+ 425 0614 6700 0004 		BEQ	DPB3
+ 426 0618 4E75      		RTS
+ 427               		;; Found end address
+ 428               	DPB3:	
+ 429 061a 343C 0002 		MOVE	#2,D2		; DSTATE
+ 430 061e 4E75      		RTS
+ 431               	
+ 432               	;;;
+ 433               	;;; GO address
+ 434               	;;;
+ 435               	
+ 436               	GO:
+ 437 0620 5248      		ADDQ	#1,A0
+ 438 0622 6100 056E 		BSR	SKIPSP
+ 439 0626 6100 058C 		BSR	RDHEX
+ 440 062a 4A10      		TST.B	(A0)
+ 441 062c 6600 FE8E 		BNE	ERR
+ 442 0630 4A42      		TST	D2
+ 443 0632 6700 0008 		BEQ	G0
+ 444               	
+ 445 0636 23C1 0000 		MOVE.L	D1,REGPC
+ 445      0000 
+ 446               	G0:
+ 447 063c 203A 0CE4 		MOVE.L	REGSSP,D0
+ 448 0640 0280 FFFF 		AND.L	#$FFFFFFFE,D0
+ 448      FFFE 
+ 449 0646 2E40      		MOVE.L	D0,A7
+ 450               	
+ 451 0648 2F3A 0C94 		MOVE.L	REGPC,-(A7)
+ 452 064c 3F3A 0CD8 		MOVE	REGSR,-(A7)
+ 453               	
+ 454 0650 207A 0CCC 		MOVE.L	REGA7,A0
+ 455 0654 4E60      		MOVE	A0,USP
+ 456               	
+ 457 0656 4239 0000 		clr.b	irq5_flg
+ 457      0000 
+ 458               	
+ 459 065c 4CFA 7FFF 		MOVEM.L	REGD0,D0-D7/A0-A6
+ 459      0C82 
+ 460               	
+ 461 0662 4E73      		RTE
+ 462               		
+ 463               	;;;
+ 464               	;;; SET memory
+ 465               	;;;
+ 466               	
+ 467               	SETM:
+ 468 0664 5248      		ADDQ	#1,A0
+68K GAS  mon.S 			page 10
+
+
+ 469 0666 6100 052A 		BSR	SKIPSP
+ 470 066a 6100 0548 		BSR	RDHEX
+ 471 066e 6100 0522 		BSR	SKIPSP
+ 472 0672 4A10      		TST.B	(A0)
+ 473 0674 6600 FE46 		BNE	ERR
+ 474 0678 2241      		MOVE.L	D1,A1
+ 475 067a 4A42      		TST	D2
+ 476 067c 6600 0006 		BNE	SM0
+ 477 0680 227A 0C54 		MOVE.L	SADDR,A1
+ 478               	SM0:
+ 479               	SM1:
+ 480 0684 2009      		MOVE.L	A1,D0
+ 481 0686 6100 040A 		BSR	HEXOUT8
+ 482 068a 41FA 06FA 		LEA	DSEP1,A0
+ 483 068e 6100 03F0 		BSR	STROUT
+ 484 0692 1011      		MOVE.B	(A1),D0
+ 485 0694 6100 0410 		BSR	HEXOUT2
+ 486 0698 103C 0020 		MOVE.B	#' ',D0
+ 487 069c 6100 0BBE 		BSR	con_out
+ 488 06a0 6100 0472 		BSR	GETLIN
+ 489 06a4 41FA 0C0A 		LEA	INBUF,A0
+ 490 06a8 6100 04E8 		BSR	SKIPSP
+ 491 06ac 1010      		MOVE.B	(A0),D0
+ 492 06ae 6600 000E 		BNE	SM2
+ 493               		;; Empty (Increment address)
+ 494 06b2 5249      		ADDQ	#1,A1
+ 495 06b4 23C9 0000 		MOVE.L	A1,SADDR
+ 495      0000 
+ 496 06ba 6000 FFC8 		BRA	SM1
+ 497               	SM2:
+ 498 06be 0C00 002D 		CMP.B	#'-',D0
+ 499 06c2 6600 000E 		BNE	SM3
+ 500               		;; '-' (Decrement address)
+ 501 06c6 5349      		SUBQ	#1,A1
+ 502 06c8 23C9 0000 		MOVE.L	A1,SADDR
+ 502      0000 
+ 503 06ce 6000 FFB4 		BRA	SM1
+ 504               	SM3:
+ 505 06d2 0C00 002E 		CMP.B	#'.',D0
+ 506 06d6 6600 000C 		BNE	SM4
+ 507               		;; '.' (Quit)
+ 508 06da 23C9 0000 		MOVE.L	A1,SADDR
+ 508      0000 
+ 509 06e0 6000 FD7A 		BRA	WSTART
+ 510               	SM4:
+ 511 06e4 6100 04CE 		BSR	RDHEX
+ 512 06e8 4A42      		TST	D2
+ 513 06ea 6700 FDD0 		BEQ	ERR
+ 514 06ee 12C1      		MOVE.B	D1,(A1)+
+ 515 06f0 23C9 0000 		MOVE.L	A1,SADDR
+ 515      0000 
+ 516 06f6 6000 FF8C 		BRA	SM1
+ 517               	
+ 518               	;;;
+ 519               	;;; LOAD HEX file
+ 520               	;;;
+ 521               	
+68K GAS  mon.S 			page 11
+
+
+ 522               	LOADH:
+ 523 06fa 5248      		ADDQ	#1,A0
+ 524 06fc 6100 0494 		BSR	SKIPSP
+ 525 0700 6100 04B2 		BSR	RDHEX
+ 526 0704 6100 048C 		BSR	SKIPSP
+ 527 0708 4A10      		TST.B	(A0)
+ 528 070a 6600 FDB0 		BNE	ERR
+ 529               	
+ 530 070e 4A42      		TST	D2
+ 531 0710 6600 0004 		BNE	LH0
+ 532               	
+ 533 0714 4281      		CLR.L	D1		; Offset
+ 534               	LH0:
+ 535 0716 6100 0B0C 		BSR	con_in
+ 536 071a 6100 0482 		BSR	UPPER
+ 537 071e 0C00 0053 		CMP.B	#'S',D0
+ 538 0722 6700 008E 		BEQ	LHS0
+ 539               	LH1:
+ 540 0726 0C00 003A 		CMP.B	#':',D0
+ 541 072a 6700 001A 		BEQ	LHI0
+ 542               		;; Skip to EOL
+ 543               	LH2:
+ 544 072e 0C00 000D 		CMP.B	#CR,D0
+ 545 0732 6700 FFE2 		BEQ	LH0
+ 546 0736 0C00 000A 		CMP.B	#LF,D0
+ 547 073a 6700 FFDA 		BEQ	LH0
+ 548               	LH3:
+ 549 073e 6100 0AE4 		BSR	con_in
+ 550 0742 6000 FFEA 		BRA	LH2
+ 551               	
+ 552               		;; Intel HEX
+ 553               	LHI0:
+ 554 0746 6100 037E 		BSR	HEXIN
+ 555 074a 4242      		CLR	D2
+ 556 074c 1400      		MOVE.B	D0,D2		; Length
+ 557 074e 1600      		MOVE.B	D0,D3		; Checksum
+ 558               	
+ 559 0750 6100 0374 		BSR	HEXIN
+ 560 0754 4284      		CLR.L	D4
+ 561 0756 1800      		MOVE.B	D0,D4		; Address H
+ 562 0758 D600      		ADD.B	D0,D3		; Checksum
+ 563               	
+ 564 075a 6100 036A 		BSR	HEXIN
+ 565 075e E14C      		LSL	#8,D4
+ 566 0760 1800      		MOVE.B	D0,D4		; Address L
+ 567 0762 D600      		ADD.B	D0,D3		; Checksum
+ 568               	
+ 569               		;; Add offset
+ 570 0764 D881      		ADD.L	D1,D4
+ 571 0766 2244      		MOVE.L	D4,A1
+ 572               	
+ 573 0768 6100 035C 		BSR	HEXIN
+ 574 076c 13C0 0000 		MOVE.B	D0,RECTYP
+ 574      0000 
+ 575 0772 D600      		ADD.B	D0,D3		; Checksum
+ 576               	
+ 577 0774 4A42      		TST	D2
+68K GAS  mon.S 			page 12
+
+
+ 578 0776 6700 0018 		BEQ	LHI3
+ 579 077a 5342      		SUBQ	#1,D2
+ 580               	LHI1:
+ 581 077c 6100 0348 		BSR	HEXIN
+ 582 0780 D600      		ADD.B	D0,D3		; Checksum
+ 583               	
+ 584 0782 4A3A 0B57 		TST.B	RECTYP
+ 585 0786 6600 0004 		BNE	LHI2
+ 586               	
+ 587 078a 12C0      		MOVE.B	D0,(A1)+
+ 588               	LHI2:
+ 589 078c 51CA FFEE 		DBF	D2,LHI1
+ 590               	LHI3:
+ 591 0790 6100 0334 		BSR	HEXIN
+ 592 0794 D600      		ADD.B	D0,D3		; Checksum
+ 593 0796 6600 000E 		BNE	LHIE		; Checksum error
+ 594 079a 4A3A 0B3F 		TST.B	RECTYP
+ 595 079e 6700 FF9E 		BEQ	LH3
+ 596 07a2 6000 FCB8 		BRA	WSTART
+ 597               	LHIE:
+ 598 07a6 41FA 05B6 		LEA	IHEMSG,A0
+ 599 07aa 6100 02D4 		BSR	STROUT
+ 600 07ae 6000 FCAC 		BRA	WSTART
+ 601               	
+ 602               		;; Motorola S record
+ 603               	LHS0:
+ 604 07b2 6100 0A70 		BSR	con_in
+ 605 07b6 13C0 0000 		MOVE.B	D0,RECTYP
+ 605      0000 
+ 606               	
+ 607 07bc 6100 0308 		BSR	HEXIN
+ 608 07c0 4242      		CLR	D2
+ 609 07c2 1400      		MOVE.B	D0,D2		; Length+3
+ 610 07c4 1600      		MOVE.B	D0,D3		; Checksum
+ 611               	
+ 612 07c6 6100 02FE 		BSR	HEXIN
+ 613 07ca 4284      		CLR.L	D4
+ 614 07cc 1800      		MOVE.B	D0,D4		; Address H
+ 615 07ce D600      		ADD.B	D0,D3		; Checksum
+ 616               	
+ 617 07d0 6100 02F4 		BSR	HEXIN
+ 618 07d4 E18C      		LSL.L	#8,D4
+ 619 07d6 1800      		MOVE.B	D0,D4		; Address L
+ 620 07d8 D600      		ADD.B	D0,D3		; Checksum
+ 621               	
+ 622               		;; Add offset
+ 623 07da D881      		ADD.L	D1,D4
+ 624 07dc 2244      		MOVE.L	D4,A1
+ 625               	
+ 626 07de 5742      		SUBQ	#3,D2
+ 627 07e0 6700 001A 		BEQ	LHS3
+ 628 07e4 5342      		SUBQ	#1,D2
+ 629               	LHS1:
+ 630 07e6 6100 02DE 		BSR	HEXIN
+ 631 07ea D600      		ADD.B	D0,D3		; Checksum
+ 632               	
+ 633 07ec 0C3A 0031 		CMP.B	#'1',RECTYP
+68K GAS  mon.S 			page 13
+
+
+ 633      0AEB 
+ 634 07f2 6600 0004 		BNE	LHS2
+ 635               	
+ 636 07f6 12C0      		MOVE.B	D0,(A1)+
+ 637               	LHS2:
+ 638 07f8 51CA FFEC 		DBF	D2,LHS1
+ 639               	LHS3:
+ 640 07fc 6100 02C8 		BSR	HEXIN
+ 641 0800 D600      		ADD.B	D0,D3		; Checksum
+ 642 0802 0C03 00FF 		CMP.B	#$FF,D3
+ 643 0806 6600 0010 		BNE	LHSE		; Checksum error
+ 644               	
+ 645 080a 0C3A 0039 		CMP.B	#'9',RECTYP
+ 645      0ACD 
+ 646 0810 6700 000E 		BEQ	LHSR
+ 647 0814 6000 FF28 		BRA	LH3
+ 648               	LHSE:
+ 649 0818 41FA 0552 		LEA	SHEMSG,A0
+ 650 081c 6100 0262 		BSR	STROUT
+ 651               	LHSR:
+ 652 0820 6000 FC3A 		BRA	WSTART
+ 653               	
+ 654               	;;;
+ 655               	;;;  SAVE HEX file
+ 656               	;;;
+ 657               	
+ 658               	SAVEH:
+ 659 0824 5248      		ADDQ	#1,A0
+ 660 0826 1010      		MOVE.B	(A0),D0
+ 661 0828 6100 0374 		BSR	UPPER
+ 662 082c 0C00 0049 		CMP.B	#'I',D0
+ 663 0830 6700 000A 		BEQ	SH0
+ 664 0834 0C00 0053 		CMP.B	#'S',D0
+ 665 0838 6600 000A 		BNE	SH1
+ 666               	SH0:
+ 667 083c 5248      		ADDQ	#1,A0
+ 668 083e 13C0 0000 		MOVE.B	D0,HEXMOD
+ 668      0000 
+ 669               	SH1:
+ 670 0844 6100 034C 		BSR	SKIPSP
+ 671 0848 6100 036A 		BSR	RDHEX
+ 672 084c 4A42      		TST	D2
+ 673 084e 6700 FC6C 		BEQ	ERR
+ 674 0852 2241      		MOVE.L	D1,A1		; Start address
+ 675 0854 6100 033C 		BSR	SKIPSP
+ 676 0858 0C18 002C 		CMP.B	#',',(A0)+
+ 677 085c 6600 FC5E 		BNE	ERR
+ 678 0860 6100 0330 		BSR	SKIPSP
+ 679 0864 6100 034E 		BSR	RDHEX		; D1 = End address
+ 680 0868 4A42      		TST	D2
+ 681 086a 6700 FC50 		BEQ	ERR
+ 682 086e 6100 0322 		BSR	SKIPSP
+ 683 0872 4A10      		TST.B	(A0)
+ 684 0874 6600 FC46 		BNE	ERR
+ 685               	
+ 686               	SH2:
+ 687 0878 9289      		SUB.L	A1,D1
+68K GAS  mon.S 			page 14
+
+
+ 688 087a 5241      		ADDQ	#1,D1		; D1 = Length
+ 689               	SH3:
+ 690 087c 6100 002A 		BSR	SHL
+ 691 0880 4A81      		TST.L	D1
+ 692 0882 6600 FFF8 		BNE	SH3
+ 693               	
+ 694 0886 0C3A 0049 		CMP.B	#'I',HEXMOD
+ 694      0A50 
+ 695 088c 6600 000E 		BNE	SH4
+ 696               		;; End record for Intel HEX
+ 697 0890 41FA 04F8 		LEA	IHEXER,A0
+ 698 0894 6100 01EA 		BSR	STROUT
+ 699 0898 6000 FBC2 		BRA	WSTART
+ 700               		;; End record for Motorola S record
+ 701               	SH4:
+ 702 089c 41FA 04FA 		LEA	SRECER,A0
+ 703 08a0 6100 01DE 		BSR	STROUT
+ 704 08a4 6000 FBB6 		BRA	WSTART
+ 705               	
+ 706               	SHL:
+ 707 08a8 7410      		MOVEQ.L	#16,D2
+ 708 08aa B282      		CMP.L	D2,D1
+ 709 08ac 6400 0004 		BCC	SHL0
+ 710 08b0 2401      		MOVE.L	D1,D2
+ 711               	SHL0:
+ 712 08b2 9282      		SUB.L	D2,D1		; D1 = remain
+ 713               	
+ 714 08b4 0C3A 0049 		CMP.B	#'I',HEXMOD
+ 714      0A22 
+ 715 08ba 6600 0044 		BNE	SHLS
+ 716               	
+ 717               		;; Intel HEX
+ 718 08be 103C 003A 		MOVE.B	#':',D0
+ 719 08c2 6100 0998 		BSR	con_out
+ 720               	
+ 721 08c6 1002      		MOVE.B	D2,D0
+ 722 08c8 1602      		MOVE.B	D2,D3		; Checksum
+ 723 08ca 6100 01DA 		BSR	HEXOUT2		; Length
+ 724               	
+ 725 08ce 2009      		MOVE.L	A1,D0
+ 726 08d0 E048      		LSR	#8,D0
+ 727 08d2 D600      		ADD.B	D0,D3		; Checksum
+ 728 08d4 6100 01D0 		BSR	HEXOUT2		; Address H
+ 729               	
+ 730 08d8 2009      		MOVE.L	A1,D0
+ 731 08da D600      		ADD.B	D0,D3		; Checksum
+ 732 08dc 6100 01C8 		BSR	HEXOUT2		; Address L
+ 733               	
+ 734 08e0 4200      		CLR.B	D0
+ 735 08e2 6100 01C2 		BSR	HEXOUT2		; Record type
+ 736               	
+ 737 08e6 5342      		SUBQ	#1,D2
+ 738               	SHLI0:
+ 739 08e8 1019      		MOVE.B	(A1)+,D0
+ 740 08ea D600      		ADD.B	D0,D3		; Checksum
+ 741 08ec 6100 01B8 		BSR	HEXOUT2
+ 742               	
+68K GAS  mon.S 			page 15
+
+
+ 743 08f0 51CA FFF6 		DBF	D2,SHLI0
+ 744               	
+ 745 08f4 1003      		MOVE.B	D3,D0
+ 746 08f6 4400      		NEG.B	D0
+ 747 08f8 6100 01AC 		BSR	HEXOUT2		; Checksum
+ 748 08fc 6000 0206 		BRA	CRLF
+ 749               	
+ 750               		;; Motorola S record
+ 751               	SHLS:	
+ 752 0900 103C 0053 		MOVE.B	#'S',D0
+ 753 0904 6100 0956 		BSR	con_out
+ 754 0908 103C 0031 		MOVE.B	#'1',D0
+ 755 090c 6100 094E 		BSR	con_out
+ 756               	
+ 757 0910 1002      		MOVE.B	D2,D0
+ 758 0912 5600      		ADDQ.B	#2+1,D0		; DataLength + 2(Addr) + 1(Sum)
+ 759 0914 1600      		MOVE.B	D0,D3		; Checksum
+ 760 0916 6100 018E 		BSR	HEXOUT2		; Length
+ 761               	
+ 762 091a 2009      		MOVE.L	A1,D0
+ 763 091c E088      		LSR.L	#8,D0
+ 764 091e D600      		ADD.B	D0,D3		; Checksum
+ 765 0920 6100 0184 		BSR	HEXOUT2		; Address H
+ 766               	
+ 767 0924 2009      		MOVE.L	A1,D0
+ 768 0926 D600      		ADD.B	D0,D3		; Checksum
+ 769 0928 6100 017C 		BSR	HEXOUT2		; Address L
+ 770               	
+ 771 092c 5342      		SUBQ	#1,D2
+ 772               	SHLS0:
+ 773 092e 1019      		MOVE.B	(A1)+,D0
+ 774 0930 D600      		ADD.B	D0,D3		; Checksum
+ 775 0932 6100 0172 		BSR	HEXOUT2		; Data
+ 776               	
+ 777 0936 51CA FFF6 		DBF	D2,SHLS0
+ 778               	
+ 779 093a 1003      		MOVE.B	D3,D0
+ 780 093c 4600      		NOT.B	D0
+ 781 093e 6100 0166 		BSR	HEXOUT2
+ 782 0942 6000 01C0 		BRA	CRLF
+ 783               	
+ 784               	;;;
+ 785               	;;; Register
+ 786               	;;;
+ 787               	REG:
+ 788 0946 5248      		ADDQ	#1,A0
+ 789 0948 6100 0248 		BSR	SKIPSP
+ 790 094c 1010      		MOVE.B	(A0),D0
+ 791 094e 6100 024E 		BSR	UPPER
+ 792 0952 4A00      		TST.B	D0
+ 793 0954 6600 000A 		BNE	RG0
+ 794 0958 6100 00D6 		BSR	RDUMP
+ 795 095c 6000 FAFE 		BRA	WSTART
+ 796               	RG0:
+ 797 0960 43FA 0560 		LEA	RNTAB,A1
+ 798               	RG1:
+ 799 0964 B011      		CMP.B	(A1),D0
+68K GAS  mon.S 			page 16
+
+
+ 800 0966 6700 0014 		BEQ	RG2		; Character match
+ 801 096a 4A29 0001 		TST.B	1(A1)
+ 802 096e 6700 00BC 		BEQ	RGE
+ 803 0972 D3FC 0000 		ADD.L	#10,A1
+ 803      000A 
+ 804 0978 6000 FFEA 		BRA	RG1
+ 805               	RG2:
+ 806 097c 0C29 000F 		CMP.B	#$0F,1(A1)
+ 806      0001 
+ 807 0982 6600 0012 		BNE	RG3
+ 808               		;; Next table
+ 809 0986 2269 0002 		MOVE.L	2(A1),A1
+ 810 098a 5248      		ADDQ	#1,A0
+ 811 098c 1010      		MOVE.B	(A0),D0
+ 812 098e 6100 020E 		BSR	UPPER
+ 813 0992 6000 FFD0 		BRA	RG1
+ 814               	RG3:	
+ 815 0996 1629 0001 		MOVE.B	1(A1),D3
+ 816 099a 6700 0090 		BEQ	RGE		; Found end mark
+ 817 099e 6A00 000A 		BPL	RG30
+ 818               		;; Check MC68010
+ 819 09a2 4A3A 0938 		TST.B	PSPEC
+ 820 09a6 6700 0084 		BEQ	RGE
+ 821               	RG30:
+ 822 09aa 2069 0006 		MOVE.L	6(A1),A0
+ 823 09ae 6100 00D0 		BSR	STROUT
+ 824 09b2 103C 003D 		MOVE.B	#'=',D0
+ 825 09b6 6100 08A4 		BSR	con_out
+ 826 09ba 2469 0002 		MOVE.L	2(A1),A2
+ 827 09be 0203 0007 		AND.B	#$07,D3
+ 828 09c2 0C03 0001 		CMP.B	#1,D3
+ 829 09c6 6600 000C 		BNE	RG4
+ 830               		;; 8 bit register
+ 831 09ca 1012      		MOVE.B	(A2),D0
+ 832 09cc 6100 00D8 		BSR	HEXOUT2
+ 833 09d0 6000 001A 		BRA	RG6
+ 834               	RG4:
+ 835 09d4 0C03 0002 		CMP.B	#2,D3
+ 836 09d8 6600 000C 		BNE	RG5
+ 837               		;; 16 bit register
+ 838 09dc 3012      		MOVE	(A2),D0
+ 839 09de 6100 00BC 		BSR	HEXOUT4
+ 840 09e2 6000 0008 		BRA	RG6
+ 841               	RG5:
+ 842               		;; 32 bit register
+ 843 09e6 2012      		MOVE.L	(A2),D0
+ 844 09e8 6100 00A8 		BSR	HEXOUT8
+ 845               	RG6:
+ 846 09ec 103C 0020 		MOVE.B	#' ',D0
+ 847 09f0 6100 086A 		BSR	con_out
+ 848 09f4 6100 011E 		BSR	GETLIN
+ 849 09f8 41FA 08B6 		LEA	INBUF,A0
+ 850 09fc 6100 0194 		BSR	SKIPSP
+ 851 0a00 6100 01B2 		BSR	RDHEX
+ 852 0a04 4A42      		TST	D2
+ 853 0a06 6700 0020 		BEQ	RGR
+ 854 0a0a 0C03 0001 		CMP.B	#1,D3
+68K GAS  mon.S 			page 17
+
+
+ 855 0a0e 6600 0008 		BNE	RG7
+ 856               		;; 8 bit register
+ 857 0a12 1481      		MOVE.B	D1,(A2)
+ 858 0a14 6000 0012 		BRA	RG9
+ 859               	RG7:
+ 860 0a18 0C03 0002 		CMP.B	#2,D3
+ 861 0a1c 6600 0008 		BNE	RG8
+ 862               		;; 16 bit register
+ 863 0a20 3481      		MOVE	D1,(A2)
+ 864 0a22 6000 0004 		BRA	RG9
+ 865               	RG8:
+ 866               		;; 32 bit register
+ 867 0a26 2481      		MOVE.L	D1,(A2)
+ 868               	RG9:
+ 869               	RGR:
+ 870 0a28 6000 FA32 		BRA	WSTART
+ 871               	RGE:
+ 872 0a2c 6000 FA8E 		BRA	ERR
+ 873               		
+ 874               	RDUMP:
+ 875 0a30 43FA 0374 		LEA	RDTAB,A1
+ 876               	RD0:
+ 877 0a34 3219      		MOVE	(A1)+,D1	; Flag
+ 878 0a36 6700 00CC 		BEQ	CRLF		; Found END mark => CR,LF and return
+ 879 0a3a 6A00 000A 		BPL	RD00
+ 880 0a3e 4A3A 089C 		TST.B	PSPEC
+ 881 0a42 6700 00C0 		BEQ	CRLF		; 
+ 882               	RD00:	
+ 883 0a46 2059      		MOVE.L	(A1)+,A0	; String address
+ 884 0a48 6100 0036 		BSR	STROUT
+ 885 0a4c 2059      		MOVE.L	(A1)+,A0	; Register save area
+ 886 0a4e 0241 0003 		AND	#$0003,D1
+ 887 0a52 0C41 0001 		CMP	#1,D1
+ 888 0a56 6600 000C 		BNE	RD1
+ 889               		;; BYTE size
+ 890 0a5a 1010      		MOVE.B	(A0),D0
+ 891 0a5c 6100 0048 		BSR	HEXOUT2
+ 892 0a60 6000 FFD2 		BRA	RD0
+ 893               	RD1:
+ 894 0a64 0C41 0002 		CMP	#2,D1
+ 895 0a68 6600 000C 		BNE	RD2
+ 896               		;; WORD size
+ 897 0a6c 3010      		MOVE	(A0),D0
+ 898 0a6e 6100 002C 		BSR	HEXOUT4
+ 899 0a72 6000 FFC0 		BRA	RD0
+ 900               	RD2:
+ 901               		;; LONG size
+ 902 0a76 2010      		MOVE.L	(A0),D0
+ 903 0a78 6100 0018 		BSR	HEXOUT8
+ 904 0a7c 6000 FFB6 		BRA	RD0
+ 905               	
+ 906               	;;;
+ 907               	;;; Other support routines
+ 908               	;;;
+ 909               	
+ 910               	STROUT:
+ 911 0a80 1018      		MOVE.B	(A0)+,D0
+68K GAS  mon.S 			page 18
+
+
+ 912 0a82 4A00      		TST.B	D0
+ 913 0a84 6700 000A 		BEQ	STROE
+ 914 0a88 6100 07D2 		BSR	con_out
+ 915 0a8c 6000 FFF2 		BRA	STROUT
+ 916               	STROE:
+ 917 0a90 4E75      		RTS
+ 918               	
+ 919               	HEXOUT8:
+ 920 0a92 2F00      		MOVE.L	D0,-(A7)
+ 921 0a94 4840      		SWAP	D0
+ 922 0a96 6100 0004 		BSR	HEXOUT4
+ 923 0a9a 201F      		MOVE.L	(A7)+,D0
+ 924               	HEXOUT4:
+ 925 0a9c 2F00      		MOVE.L	D0,-(A7)
+ 926 0a9e E058      		ROR	#8,D0
+ 927 0aa0 6100 0004 		BSR	HEXOUT2
+ 928 0aa4 201F      		MOVE.L	(A7)+,D0
+ 929               	HEXOUT2:
+ 930 0aa6 2F00      		MOVE.L	D0,-(A7)
+ 931 0aa8 E818      		ROR.B	#4,D0
+ 932 0aaa 6100 0004 		BSR	HEXOUT1
+ 933 0aae 201F      		MOVE.L	(A7)+,D0
+ 934               	HEXOUT1:
+ 935 0ab0 0200 000F 		AND.B	#$0F,D0
+ 936 0ab4 0600 0030 		ADD.B	#'0',D0
+ 937 0ab8 0C00 003A 		CMP.B	#'9'+1,D0
+ 938 0abc 6500 079E 		BCS	con_out
+ 939 0ac0 5E40      		ADD	#'A'-'9'-1,D0
+ 940 0ac2 6000 0798 		BRA	con_out
+ 941               	
+ 942               	HEXIN:
+ 943 0ac6 4200      		CLR.B	D0
+ 944 0ac8 6100 0004 		BSR	HI0
+ 945 0acc E908      		LSL.B	#4,D0
+ 946               	HI0:
+ 947 0ace 3F00      		MOVE	D0,-(A7)
+ 948 0ad0 6100 0752 		BSR	con_in
+ 949 0ad4 6100 00C8 		BSR	UPPER
+ 950 0ad8 0C00 0030 		CMP.B	#'0',D0
+ 951 0adc 6500 0022 		BCS	HIR
+ 952 0ae0 0C00 003A 		CMP.B	#'9'+1,D0
+ 953 0ae4 6500 0014 		BCS	HI1
+ 954 0ae8 0C00 0041 		CMP.B	#'A',D0
+ 955 0aec 6500 0012 		BCS	HIR
+ 956 0af0 0C00 0047 		CMP.B	#'F'+1,D0
+ 957 0af4 6400 000A 		BCC	HIR
+ 958 0af8 5F00      		SUB.B	#'A'-'9'-1,D0
+ 959               	HI1:
+ 960 0afa 0400 0030 		SUB.B	#'0',D0
+ 961 0afe 8057      		OR	(A7),D0
+ 962               	HIR:
+ 963 0b00 544F      		ADDQ	#2,A7
+ 964 0b02 4E75      		RTS
+ 965               	
+ 966               	CRLF:
+ 967 0b04 103C 000D 		MOVE.B	#CR,D0
+ 968 0b08 6100 0752 		BSR	con_out
+68K GAS  mon.S 			page 19
+
+
+ 969 0b0c 103C 000A 		MOVE.B	#LF,D0
+ 970 0b10 6000 074A 		BRA	con_out
+ 971               	
+ 972               	GETLIN:
+ 973 0b14 41FA 079A 		LEA	INBUF,A0
+ 974 0b18 4201      		CLR.B	D1
+ 975               	GL0:
+ 976 0b1a 6100 0708 		BSR	con_in
+ 977 0b1e 0C00 000D 		CMP.B	#CR,D0
+ 978 0b22 6700 0064 		BEQ	GLE
+ 979 0b26 0C00 000A 		CMP.B	#LF,D0
+ 980 0b2a 6700 005C 		BEQ	GLE
+ 981 0b2e 0C00 0008 		CMP.B	#BS,D0
+ 982 0b32 6700 002E 		BEQ	GLB
+ 983 0b36 0C00 007F 		CMP.B	#DEL,D0
+ 984 0b3a 6700 0026 		BEQ	GLB
+ 985 0b3e 0C00 0020 		CMP.B	#' ',D0
+ 986 0b42 6500 FFD6 		BCS	GL0
+ 987 0b46 0C00 0080 		CMP.B	#$80,D0
+ 988 0b4a 6400 FFCE 		BCC	GL0
+ 989 0b4e 0C01 0017 		CMP.B	#BUFLEN-1,D1
+ 990 0b52 6400 FFC6 		BCC	GL0		; Too long
+ 991 0b56 5201      		ADDQ.B	#1,D1
+ 992 0b58 10C0      		MOVE.B	D0,(A0)+
+ 993 0b5a 6100 0700 		BSR	con_out
+ 994 0b5e 6000 FFBA 		BRA	GL0
+ 995               	GLB:
+ 996 0b62 4A01      		TST.B	D1
+ 997 0b64 6700 FFB4 		BEQ	GL0
+ 998 0b68 5388      		SUBQ.L	#1,A0
+ 999 0b6a 5301      		SUBQ.B	#1,D1
+ 1000 0b6c 103C 0008 		MOVE.B	#BS,D0
+ 1001 0b70 6100 06EA 		BSR	con_out
+ 1002 0b74 103C 0020 		MOVE.B	#' ',D0
+ 1003 0b78 6100 06E2 		BSR	con_out
+ 1004 0b7c 103C 0008 		MOVE.B	#BS,D0
+ 1005 0b80 6100 06DA 		BSR	con_out
+ 1006 0b84 6000 FF94 		BRA	GL0
+ 1007               	GLE:
+ 1008 0b88 6100 FF7A 		BSR	CRLF
+ 1009 0b8c 10BC 0000 		MOVE.B	#$00,(A0)
+ 1010 0b90 4E75      		RTS
+ 1011               	
+ 1012               	SKIPSP:
+ 1013 0b92 0C18 0020 		CMP.B	#' ',(A0)+
+ 1014 0b96 6700 FFFA 		BEQ	SKIPSP
+ 1015 0b9a 5388      		SUBQ.L	#1,A0
+ 1016 0b9c 4E75      		RTS
+ 1017               	
+ 1018               	UPPER:
+ 1019 0b9e 0C00 0061 		CMP.B	#'a',D0
+ 1020 0ba2 6500 000E 		BCS	UPR
+ 1021 0ba6 0C00 007B 		CMP.B	#'z'+1,D0
+ 1022 0baa 6400 0006 		BCC	UPR
+ 1023 0bae 0600 FFE0 		ADD.B	#'A'-'a',D0
+ 1024               	UPR:
+ 1025 0bb2 4E75      		RTS
+68K GAS  mon.S 			page 20
+
+
+ 1026               	
+ 1027               	RDHEX:
+ 1028 0bb4 4242      		CLR	D2		; Count
+ 1029 0bb6 4281      		CLR.L	D1		; Value
+ 1030               	RH0:
+ 1031 0bb8 1010      		MOVE.B	(A0),D0
+ 1032 0bba 6100 FFE2 		BSR	UPPER
+ 1033 0bbe 0C00 0030 		CMP.B	#'0',D0
+ 1034 0bc2 6500 002C 		BCS	RHE
+ 1035 0bc6 0C00 003A 		CMP.B	#'9'+1,D0
+ 1036 0bca 6500 0014 		BCS	RH1
+ 1037 0bce 0C00 0041 		CMP.B	#'A',D0
+ 1038 0bd2 6500 001C 		BCS	RHE
+ 1039 0bd6 0C00 0047 		CMP.B	#'F'+1,D0
+ 1040 0bda 6400 0014 		BCC	RHE
+ 1041 0bde 5F00      		SUB.B	#'A'-'9'-1,D0
+ 1042               	RH1:
+ 1043 0be0 0400 0030 		SUB.B	#'0',D0
+ 1044 0be4 E989      		LSL.L	#4,D1
+ 1045 0be6 8200      		OR.B	D0,D1
+ 1046 0be8 5248      		ADDQ	#1,A0
+ 1047 0bea 5242      		ADDQ	#1,D2
+ 1048 0bec 6000 FFCA 		BRA	RH0
+ 1049               	RHE:
+ 1050 0bf0 4E75      		RTS
+ 1051               	
+ 1052               	;;;
+ 1053               	;;; Exception Handler
+ 1054               	;;;
+ 1055               	
+ 1056               	;
+ 1057               	; timer interrupt handler
+ 1058               	;contmp_buf	ds.b	con_size	; tmp string buffer
+ 1059               	
+ 1060               	IRQ5_H:
+ 1061 0bf2 48E7 F0C0 		movem.l	d0-d3/a0-a1,-(a7)	;push d0,d1,a0,a1
+ 1062 0bf6 0C3A 0080 		cmp.b	#$80,crd_cnt
+ 1062      F518 
+ 1063 0bfc 6700 0084 		beq	exit_cin	; buffer full, then ignore key data
+ 1064               	
+ 1065 0c00 23FC 0000 		move.l	#contmp_buf,STR_addr	; save temp buffer address
+ 1065      0000 0000 
+ 1065      0000 
+ 1066               	
+ 1067               		; change change big endian to little endian
+ 1068 0c0a 41FA F4F6 		lea	STR_addr,a0
+ 1069 0c0e 1010      		move.b	(a0),d0		;hh
+ 1070 0c10 1228 0001 		move.b	1(a0),d1		;hl
+ 1071 0c14 1428 0002 		move.b	2(a0),d2		;lh
+ 1072 0c18 1628 0003 		move.b	3(a0),d3		;ll
+ 1073 0c1c 1083      		move.b	d3,(a0)
+ 1074 0c1e 1142 0001 		move.b	d2,1(a0)
+ 1075 0c22 1141 0002 		move.b	d1,2(a0)
+ 1076 0c26 1140 0003 		move.b	d0,3(a0)
+ 1077               	
+ 1078 0c2a 103C 0080 		move.b	#$80,d0
+ 1079 0c2e 903A F4E2 		sub.b	crd_cnt,d0		; d0 = #$80 - crd_cnt
+68K GAS  mon.S 			page 21
+
+
+ 1080 0c32 13C0 0000 		move.b	d0,UNI_CHR		; set read buffer size
+ 1080      0000 
+ 1081 0c38 13FC 000B 		move.b	#REQ_STRIN,UREQ_COM	; set string input request
+ 1081      0000 0000 
+ 1082 0c40 1039 0008 		move.b	PIC_REQ,d0		; request STRIN to PIC. Memory $80000 read
+ 1082      0000 
+ 1083               	wa_pic:
+ 1084 0c46 103A F4B8 		move.b	UREQ_COM,d0
+ 1085 0c4a 6600 FFFA 		bne	wa_pic
+ 1086               	
+ 1087 0c4e 103A F4B1 		move.b	UNI_CHR,d0		; get string count
+ 1088 0c52 6700 002E 		beq	exit_cin		; exit, if no data
+ 1089               	
+ 1090 0c56 41FA F5A8 		lea	crd_buf,a0		; a0 = crd_buf
+ 1091 0c5a 43FA F524 		lea	contmp_buf,a1		; a1 = contmp_buf
+ 1092 0c5e 4281      		clr.l	d1
+ 1093 0c60 123A F4B2 		move.b	crd_wp,d1		; d1 = crd_wp
+ 1094               	
+ 1095               	mv_str:
+ 1096 0c64 1191 1800 		move.b	(a1),0(a0,d1)	; crd_buf[d1] <- (a1)++
+ 1097 0c68 5249      		addq	#1,a1
+ 1098 0c6a 5201      		addq.b	#1,d1			; crd_wp++
+ 1099 0c6c 0201 007F 		andi.b	#$7f,d1
+ 1100 0c70 5239 0000 		addq.b	#1,crd_cnt		; crd_cnt++
+ 1100      0000 
+ 1101 0c76 5300      		subq.b	#1,d0			; decriment string count
+ 1102 0c78 6600 FFEA 		bne	mv_str
+ 1103 0c7c 13C1 0000 		move.b	d1,crd_wp		; update write point
+ 1103      0000 
+ 1104               	
+ 1105               	exit_cin:
+ 1106 0c82 7001      		moveq	#1,d0
+ 1107 0c84 6100 0060 		bsr	clr_int			; clear interrupt request
+ 1108 0c88 4CDF 030F 		movem.l	(a7)+,d0-d3/a0-a1	 ;pop a1,a0,d1,d0
+ 1109               	
+ 1110               	;
+ 1111               	; jump FIZIX interrupt program
+ 1112               	;
+ 1113 0c8c 4A3A F487 		tst.b	irq5_flg
+ 1114 0c90 6600 0006 		bne		DUMMY_H
+ 1115               	
+ 1116 0c94 4EF8 2056 		jmp	interrupt
+ 1117               	
+ 1118               		;; Dummy
+ 1119               	DUMMY_H:
+ 1120 0c98 4E73      		RTE
+ 1121               	;
+ 1122               	; NMI interrupt
+ 1123               	;
+ 1124               	NMI_H:
+ 1125 0c9a 48F9 7FFF 		MOVEM.L	D0-D7/A0-A6,REGD0
+ 1125      0000 0000 
+ 1126 0ca2 23CF 0000 		move.l	a7,REGSSP		; save SSP
+ 1126      0000 
+ 1127 0ca8 23CF 0000 		move.l	a7,REGA7
+ 1127      0000 
+ 1128 0cae 2C4F      		move.l	a7,a6
+68K GAS  mon.S 			page 22
+
+
+ 1129 0cb0 301E      		move.w	(a6)+,d0		; get status register
+ 1130 0cb2 33C0 0000 		move.w	d0,REGSR
+ 1130      0000 
+ 1131 0cb8 2016      		move.l	(a6),d0			; get PC
+ 1132 0cba 23C0 0000 		move.l	d0,REGPC
+ 1132      0000 
+ 1133               	
+ 1134 0cc0 41FA 0010 		LEA	NMI_MSG,A0
+ 1135 0cc4 6100 FDBA 		BSR	STROUT
+ 1136 0cc8 7000      		moveq	#0,d0
+ 1137 0cca 6100 001A 		bsr	clr_int			; clear interrupt request
+ 1138 0cce 6000 F78C 		bra	WSTART
+ 1139               	
+ 1140               		ALIGN	2
+ 1141               	NMI_MSG:
+ 1142 0cd2 0D0A      		byte	CR,LF
+ 1143 0cd4 4E4D 4920 		ascii	"NMI Interrupt!!"
+ 1143      496E 7465 
+ 1143      7272 7570 
+ 1143      7421 21
+ 1144 0ce3 0D0A 00   		byte	CR,LF,$00
+ 1145               	
+ 1146               	clr_int:
+ 1147 0ce6 13C0 0000 		move.b	d0,UNI_CHR		; set interrupt source(0: NMI 1:IRQ5)
+ 1147      0000 
+ 1148 0cec 13FC 000C 		move.b	#REQ_CLR_IRQ,UREQ_COM	; set clear interrupt request
+ 1148      0000 0000 
+ 1149 0cf4 1039 0008 		move.b	PIC_REQ,d0		; request conin to PIC. Memory $80000 read
+ 1149      0000 
+ 1150               	w_pic:
+ 1151 0cfa 103A F404 		move.b	UREQ_COM,d0
+ 1152 0cfe 6600 FFFA 		bne	w_pic
+ 1153 0d02 4E75      		rts
+ 1154               	
+ 1155               	;;; DUMP group 0 (Address/Bus Error)
+ 1156               	G0DUMP:
+ 1157               		;; Function Code
+ 1158 0d04 303A 0628 		MOVE	GR0BUF,D0
+ 1159 0d08 0240 0007 		AND	#$0007,D0
+ 1160 0d0c E548      		LSL	#2,D0
+ 1161 0d0e 41FA 03DA 		LEA	FCTAB,A0
+ 1162 0d12 2070 3000 		MOVE.L	0(A0,D3.W),A0
+ 1163 0d16 6100 FD68 		BSR	STROUT
+ 1164               	
+ 1165               		;; Read / Write
+ 1166 0d1a 303A 0612 		MOVE	GR0BUF,D0
+ 1167 0d1e 0240 0010 		AND	#$0010,D0
+ 1168 0d22 6600 000A 		BNE	G0D00
+ 1169 0d26 41FA 0472 		LEA	G0WR,A0
+ 1170 0d2a 6000 0006 		BRA	G0D01
+ 1171               	G0D00:
+ 1172 0d2e 41FA 0472 		LEA	G0RD,A0
+ 1173               	G0D01:
+ 1174 0d32 6100 FD4C 		BSR	STROUT
+ 1175               	
+ 1176               		;; Address
+ 1177 0d36 203A 05F8 		MOVE.L	GR0BUF+2,D0
+68K GAS  mon.S 			page 23
+
+
+ 1178 0d3a 6100 FD56 		BSR	HEXOUT8		; Access address
+ 1179               	
+ 1180               		;; Instruction Register
+ 1181 0d3e 41FA 0468 		LEA	G0INS0,A0
+ 1182 0d42 6100 FD3C 		BSR	STROUT
+ 1183 0d46 303A 05EC 		MOVE	GR0BUF+6,D0
+ 1184 0d4a 6100 FD50 		BSR	HEXOUT4		; Instruction register
+ 1185 0d4e 103C 0029 		MOVE.B	#')',D0
+ 1186 0d52 6100 0508 		BSR	con_out
+ 1187               	
+ 1188 0d56 6000 FDAC 		BRA	CRLF
+ 1189               	
+ 1190               	;;;
+ 1191               	;;; Data area
+ 1192               	;;; 
+ 1193               		
+ 1194               		ALIGN	2
+ 1195 0d5a 5D20      	PROMPT:	ascii	"] "
+ 1196 0d5c 00        		byte	$00
+ 1197               	
+ 1198 0d5d 00        		ALIGN	2
+ 1199 0d5e 4572 726F 	IHEMSG:	ascii	"Error ihex"
+ 1199      7220 6968 
+ 1199      6578 
+ 1200 0d68 0D0A 00   		byte	CR,LF,$00
+ 1201 0d6b 00        		ALIGN	2
+ 1202 0d6c 4572 726F 	SHEMSG:	ascii	"Error srec"
+ 1202      7220 7372 
+ 1202      6563 
+ 1203 0d76 0D0A 00   		byte	CR,LF,$00
+ 1204 0d79 00        		ALIGN	2
+ 1205 0d7a 4572 726F 	ERRMSG:	ascii	"Error"
+ 1205      72
+ 1206 0d7f 0D0A 00   		byte	CR,LF,$00
+ 1207               	
+ 1208               		ALIGN	2
+ 1209 0d82 203A      	DSEP0:	ascii	" :"
+ 1210 0d84 00        		byte	$00
+ 1211 0d85 00        		ALIGN	2
+ 1212 0d86 203A 20   	DSEP1:	ascii	" : "
+ 1213 0d89 00        		byte	$00
+ 1214               		ALIGN	2
+ 1215 0d8a 3A30 3030 	IHEXER:	ascii	":00000001FF"
+ 1215      3030 3030 
+ 1215      3146 46
+ 1216 0d95 0D0A 00   		byte	CR,LF,$00
+ 1217               		ALIGN	2
+ 1218 0d98 5339 3033 	SRECER: ascii	"S9030000FC"
+ 1218      3030 3030 
+ 1218      4643 
+ 1219 0da2 0D0A 00   		byte	CR,LF,$00
+ 1220               	
+ 1221 0da5 00        		ALIGN	2
+ 1222 0da6 0003      	RDTAB:	DC.W	$0003		; LONG
+ 1223 0da8 0000 0000 		DC.L	RDSD07,REGD0
+ 1223      0000 0000 
+ 1224 0db0 0003      		DC.W	$0003
+68K GAS  mon.S 			page 24
+
+
+ 1225 0db2 0000 0000 		DC.L	RDSC,REGD1
+ 1225      0000 0000 
+ 1226 0dba 0003      		DC.W	$0003
+ 1227 0dbc 0000 0000 		DC.L	RDSC,REGD2
+ 1227      0000 0000 
+ 1228 0dc4 0003      		DC.W	$0003
+ 1229 0dc6 0000 0000 		DC.L	RDSC,REGD3
+ 1229      0000 0000 
+ 1230 0dce 0003      		DC.W	$0003
+ 1231 0dd0 0000 0000 		DC.L	RDSCS,REGD4
+ 1231      0000 0000 
+ 1232 0dd8 0003      		DC.W	$0003
+ 1233 0dda 0000 0000 		DC.L	RDSC,REGD5
+ 1233      0000 0000 
+ 1234 0de2 0003      		DC.W	$0003
+ 1235 0de4 0000 0000 		DC.L	RDSC,REGD6
+ 1235      0000 0000 
+ 1236 0dec 0003      		DC.W	$0003
+ 1237 0dee 0000 0000 		DC.L	RDSC,REGD7
+ 1237      0000 0000 
+ 1238               	
+ 1239 0df6 0003      		DC.W	$0003
+ 1240 0df8 0000 0000 		DC.L	RDSA07,REGA0
+ 1240      0000 0000 
+ 1241 0e00 0003      		DC.W	$0003
+ 1242 0e02 0000 0000 		DC.L	RDSC,REGA1
+ 1242      0000 0000 
+ 1243 0e0a 0003      		DC.W	$0003
+ 1244 0e0c 0000 0000 		DC.L	RDSC,REGA2
+ 1244      0000 0000 
+ 1245 0e14 0003      		DC.W	$0003
+ 1246 0e16 0000 0000 		DC.L	RDSC,REGA3
+ 1246      0000 0000 
+ 1247 0e1e 0003      		DC.W	$0003
+ 1248 0e20 0000 0000 		DC.L	RDSCS,REGA4
+ 1248      0000 0000 
+ 1249 0e28 0003      		DC.W	$0003
+ 1250 0e2a 0000 0000 		DC.L	RDSC,REGA5
+ 1250      0000 0000 
+ 1251 0e32 0003      		DC.W	$0003
+ 1252 0e34 0000 0000 		DC.L	RDSC,REGA6
+ 1252      0000 0000 
+ 1253 0e3c 0003      		DC.W	$0003
+ 1254 0e3e 0000 0000 		DC.L	RDSC,REGA7
+ 1254      0000 0000 
+ 1255               	
+ 1256 0e46 0003      		DC.W	$0003
+ 1257 0e48 0000 0000 		DC.L	RDSPC,REGPC
+ 1257      0000 0000 
+ 1258 0e50 0003      		DC.W	$0003
+ 1259 0e52 0000 0000 		DC.L	RDSSSP,REGSSP
+ 1259      0000 0000 
+ 1260 0e5a 0002      		DC.W	$0002		; WORD
+ 1261 0e5c 0000 0000 		DC.L	RDSSR,REGSR
+ 1261      0000 0000 
+ 1262               	
+ 1263 0e64 8003      		DC.W	$8003		; LONG + (END flag for MC68000/8)
+68K GAS  mon.S 			page 25
+
+
+ 1264 0e66 0000 0000 		DC.L	RDSVBR,REGVBR
+ 1264      0000 0000 
+ 1265 0e6e 8001      		DC.W	$8001		; BYTE
+ 1266 0e70 0000 0000 		DC.L	RDSSFC,REGSFC
+ 1266      0000 0000 
+ 1267 0e78 8001      		DC.W	$8001		; BYTE
+ 1268 0e7a 0000 0000 		DC.L	RDSDFC,REGDFC	
+ 1268      0000 0000 
+ 1269               		
+ 1270 0e82 0000      		DC.W	$0000		; END
+ 1271               	
+ 1272               		ALIGN	2
+ 1273 0e84 4430 2D44 	RDSD07:	ascii	"D0-D7="
+ 1273      373D 
+ 1274 0e8a 00        		byte	$00
+ 1275 0e8b 00        		ALIGN	2
+ 1276 0e8c 0D0A      	RDSA07:	byte	CR,LF
+ 1277 0e8e 4130 2D41 		ascii	"A0-A7="
+ 1277      373D 
+ 1278 0e94 00        		byte	$00
+ 1279 0e95 00        		ALIGN	2
+ 1280 0e96 0D0A      	RDSPC:	byte	CR,LF
+ 1281 0e98 5043 3D   		ascii	"PC="
+ 1282 0e9b 00        		byte	$00
+ 1283               		ALIGN	2
+ 1284 0e9c 2053 5350 	RDSSSP:	ascii	" SSP="
+ 1284      3D
+ 1285 0ea1 00        		byte	$00
+ 1286               		ALIGN	2
+ 1287 0ea2 2053 523D 	RDSSR:	ascii	" SR="
+ 1288 0ea6 00        		byte	$00
+ 1289 0ea7 00        		ALIGN	2
+ 1290 0ea8 2020 5642 	RDSVBR:	ascii	"  VBR="
+ 1290      523D 
+ 1291 0eae 00        		byte	$00
+ 1292 0eaf 00        		ALIGN	2
+ 1293 0eb0 2053 4643 	RDSSFC:	ascii	" SFC="
+ 1293      3D
+ 1294 0eb5 00        		byte	$00
+ 1295               		ALIGN	2
+ 1296 0eb6 2044 4643 	RDSDFC:	ascii	" DFC="
+ 1296      3D
+ 1297 0ebb 00        		byte	$00
+ 1298               		ALIGN	2
+ 1299 0ebc 2C        	RDSC:	ascii	","
+ 1300 0ebd 00        		byte	$00
+ 1301               		ALIGN	2
+ 1302 0ebe 2C20      	RDSCS:	ascii	", "
+ 1303 0ec0 00        		byte	$00
+ 1304               	
+ 1305 0ec1 00        		ALIGN	2
+ 1306               	RNTAB:
+ 1307 0ec2 410F      		DC.B	'A',$0F		; "A?"
+ 1308 0ec4 0000 0000 		DC.L	RNTABA,0
+ 1308      0000 0000 
+ 1309 0ecc 430F      		DC.B	'C',$0F		; "C?"
+ 1310 0ece 0000 0000 		DC.L	RNTABC,0
+68K GAS  mon.S 			page 26
+
+
+ 1310      0000 0000 
+ 1311 0ed6 440F      		DC.B	'D',$0F		; "D?"
+ 1312 0ed8 0000 0000 		DC.L	RNTABD,0
+ 1312      0000 0000 
+ 1313 0ee0 500F      		DC.B	'P',$0F		; "P?"
+ 1314 0ee2 0000 0000 		DC.L	RNTABP,0
+ 1314      0000 0000 
+ 1315 0eea 530F      		DC.B	'S',$0F		; "S?"
+ 1316 0eec 0000 0000 		DC.L	RNTABS,0
+ 1316      0000 0000 
+ 1317 0ef4 560F      		DC.B	'V',$0F		; "V?"
+ 1318 0ef6 0000 0000 		DC.L	RNTABV,0
+ 1318      0000 0000 
+ 1319               	
+ 1320 0efe 0000      		DC.B	$00,$00		; End mark
+ 1321 0f00 0000 0000 		DC.L	0,0
+ 1321      0000 0000 
+ 1322               	
+ 1323               	RNTABA:
+ 1324 0f08 3003      		DC.B	'0',3		; "A0"
+ 1325 0f0a 0000 0000 		DC.L	REGA0,RNA0
+ 1325      0000 0000 
+ 1326 0f12 3103      		DC.B	'1',3		; "A1"
+ 1327 0f14 0000 0000 		DC.L	REGA1,RNA1
+ 1327      0000 0000 
+ 1328 0f1c 3203      		DC.B	'2',3		; "A2"
+ 1329 0f1e 0000 0000 		DC.L	REGA2,RNA2
+ 1329      0000 0000 
+ 1330 0f26 3303      		DC.B	'3',3		; "A3"
+ 1331 0f28 0000 0000 		DC.L	REGA3,RNA3
+ 1331      0000 0000 
+ 1332 0f30 3403      		DC.B	'4',3		; "A4"
+ 1333 0f32 0000 0000 		DC.L	REGA4,RNA4
+ 1333      0000 0000 
+ 1334 0f3a 3503      		DC.B	'5',3		; "A5"
+ 1335 0f3c 0000 0000 		DC.L	REGA5,RNA5
+ 1335      0000 0000 
+ 1336 0f44 3603      		DC.B	'6',3		; "A6"
+ 1337 0f46 0000 0000 		DC.L	REGA6,RNA6
+ 1337      0000 0000 
+ 1338 0f4e 3703      		DC.B	'7',3		; "A7"
+ 1339 0f50 0000 0000 		DC.L	REGA7,RNA7
+ 1339      0000 0000 
+ 1340               	
+ 1341 0f58 0000      		DC.B	$00,$00		; End mark
+ 1342 0f5a 0000 0000 		DC.L	0,0
+ 1342      0000 0000 
+ 1343               	
+ 1344               	RNTABC:
+ 1345 0f62 430F      		DC.B	'C',$0F		; "CC"
+ 1346 0f64 0000 0000 		DC.L	RNTABCC,0
+ 1346      0000 0000 
+ 1347               		
+ 1348 0f6c 0000      		DC.B	$00,$00		; End mark
+ 1349 0f6e 0000 0000 		DC.L	0,0
+ 1349      0000 0000 
+ 1350               	
+68K GAS  mon.S 			page 27
+
+
+ 1351               	RNTABD:
+ 1352 0f76 3003      		DC.B	'0',3		; "D0"
+ 1353 0f78 0000 0000 		DC.L	REGD0,RND0
+ 1353      0000 0000 
+ 1354 0f80 3103      		DC.B	'1',3		; "D1"
+ 1355 0f82 0000 0000 		DC.L	REGD1,RND1
+ 1355      0000 0000 
+ 1356 0f8a 3203      		DC.B	'2',3		; "D2"
+ 1357 0f8c 0000 0000 		DC.L	REGD2,RND2
+ 1357      0000 0000 
+ 1358 0f94 3303      		DC.B	'3',3		; "D3"
+ 1359 0f96 0000 0000 		DC.L	REGD3,RND3
+ 1359      0000 0000 
+ 1360 0f9e 3403      		DC.B	'4',3		; "D4"
+ 1361 0fa0 0000 0000 		DC.L	REGD4,RND4
+ 1361      0000 0000 
+ 1362 0fa8 3503      		DC.B	'5',3		; "D5"
+ 1363 0faa 0000 0000 		DC.L	REGD5,RND5
+ 1363      0000 0000 
+ 1364 0fb2 3603      		DC.B	'6',3		; "D6"
+ 1365 0fb4 0000 0000 		DC.L	REGD6,RND6
+ 1365      0000 0000 
+ 1366 0fbc 3703      		DC.B	'7',3		; "D7"
+ 1367 0fbe 0000 0000 		DC.L	REGD7,RND7
+ 1367      0000 0000 
+ 1368 0fc6 460F      		DC.B	'F',$0F		; "DF?"
+ 1369 0fc8 0000 0000 		DC.L	RNTABDF,0
+ 1369      0000 0000 
+ 1370               	
+ 1371 0fd0 0000      		DC.B	$00,$00		; End mark
+ 1372 0fd2 0000 0000 		DC.L	0,0
+ 1372      0000 0000 
+ 1373               	
+ 1374               	RNTABP:
+ 1375 0fda 4303      		DC.B	'C',3		; "PC"
+ 1376 0fdc 0000 0000 		DC.L	REGPC,RNPC
+ 1376      0000 0000 
+ 1377               	
+ 1378 0fe4 0000      		DC.B	$00,$00		; End mark
+ 1379 0fe6 0000 0000 		DC.L	0,0
+ 1379      0000 0000 
+ 1380               	
+ 1381               	RNTABS:
+ 1382 0fee 460F      		DC.B	'F',$0F		; "SF?"
+ 1383 0ff0 0000 0000 		DC.L	RNTABSF,0
+ 1383      0000 0000 
+ 1384 0ff8 5202      		DC.B	'R',2		; "SR"
+ 1385 0ffa 0000 0000 		DC.L	REGSR,RNSR
+ 1385      0000 0000 
+ 1386 1002 530F      		DC.B	'S',$0F		; "SS?"
+ 1387 1004 0000 0000 		DC.L	RNTABSS,0
+ 1387      0000 0000 
+ 1388               	
+ 1389 100c 0000      		DC.B	$00,$00		; End mark
+ 1390 100e 0000 0000 		DC.L	0,0
+ 1390      0000 0000 
+ 1391               	
+68K GAS  mon.S 			page 28
+
+
+ 1392               	RNTABV:
+ 1393 1016 420F      		DC.B	'B',$0F		; "VB?"
+ 1394 1018 0000 0000 		DC.L	RNTABVB,0
+ 1394      0000 0000 
+ 1395               	
+ 1396 1020 0000      		DC.B	$00,$00		; End mark
+ 1397 1022 0000 0000 		DC.L	0,0
+ 1397      0000 0000 
+ 1398               	
+ 1399               	RNTABCC:
+ 1400 102a 5201      		DC.B	'R',1		; "CCR"
+ 1401 102c 0000 0000 		DC.L	REGSR+1,RNCCR
+ 1401      0000 0000 
+ 1402               		
+ 1403 1034 0000      		DC.B	$00,$00		; End mark
+ 1404 1036 0000 0000 		DC.L	0,0
+ 1404      0000 0000 
+ 1405               	
+ 1406               	RNTABDF:
+ 1407 103e 4381      		DC.B	'C',$81		; "DFC"
+ 1408 1040 0000 0000 		DC.L	REGDFC,RNDFC
+ 1408      0000 0000 
+ 1409               		
+ 1410 1048 0000      		DC.B	$00,$00		; End mark
+ 1411 104a 0000 0000 		DC.L	0,0
+ 1411      0000 0000 
+ 1412               	
+ 1413               	RNTABSF:
+ 1414 1052 4381      		DC.B	'C',$81		; "SFC"
+ 1415 1054 0000 0000 		DC.L	REGSFC,RNSFC
+ 1415      0000 0000 
+ 1416               		
+ 1417 105c 0000      		DC.B	$00,$00		; End mark
+ 1418 105e 0000 0000 		DC.L	0,0
+ 1418      0000 0000 
+ 1419               	
+ 1420               	RNTABSS:
+ 1421 1066 5003      		DC.B	'P',3		; "SSP"
+ 1422 1068 0000 0000 		DC.L	REGSSP,RNSSP
+ 1422      0000 0000 
+ 1423               		
+ 1424 1070 0000      		DC.B	$00,$00		; End mark
+ 1425 1072 0000 0000 		DC.L	0,0
+ 1425      0000 0000 
+ 1426               	
+ 1427               	RNTABVB:
+ 1428 107a 5283      		DC.B	'R',$83		; "VBR"
+ 1429 107c 0000 0000 		DC.L	REGVBR,RNVBR
+ 1429      0000 0000 
+ 1430               		
+ 1431 1084 0000      		DC.B	$00,$00		; End mark
+ 1432 1086 0000 0000 		DC.L	0,0
+ 1432      0000 0000 
+ 1433               	
+ 1434 108e 4130      	RNA0:	ascii	"A0"
+ 1435 1090 00        		byte	$00
+ 1436 1091 0041 31   	RNA1:	ascii	"A1"
+68K GAS  mon.S 			page 29
+
+
+ 1437 1094 00        		byte	$00
+ 1438 1095 0041 32   	RNA2:	ascii	"A2"
+ 1439 1098 00        		byte	$00
+ 1440 1099 0041 33   	RNA3:	ascii	"A3"
+ 1441 109c 00        		byte	$00
+ 1442 109d 0041 34   	RNA4:	ascii	"A4"
+ 1443 10a0 00        		byte	$00
+ 1444 10a1 0041 35   	RNA5:	ascii	"A5"
+ 1445 10a4 00        		byte	$00
+ 1446 10a5 0041 36   	RNA6:	ascii	"A6"
+ 1447 10a8 00        		byte	$00
+ 1448 10a9 0041 37   	RNA7:	ascii	"A7"
+ 1449 10ac 00        		byte	$00
+ 1450 10ad 0043 4352 	RNCCR:	ascii	"CCR"
+ 1451 10b1 00        		byte	$00
+ 1452 10b2 4430      	RND0:	ascii	"D0"
+ 1453 10b4 00        		byte	$00
+ 1454 10b5 0044 31   	RND1:	ascii	"D1"
+ 1455 10b8 00        		byte	$00
+ 1456 10b9 0044 32   	RND2:	ascii	"D2"
+ 1457 10bc 00        		byte	$00
+ 1458 10bd 0044 33   	RND3:	ascii	"D3"
+ 1459 10c0 00        		byte	$00
+ 1460 10c1 0044 34   	RND4:	ascii	"D4"
+ 1461 10c4 00        		byte	$00
+ 1462 10c5 0044 35   	RND5:	ascii	"D5"
+ 1463 10c8 00        		byte	$00
+ 1464 10c9 0044 36   	RND6:	ascii	"D6"
+ 1465 10cc 00        		byte	$00
+ 1466 10cd 0044 37   	RND7:	ascii	"D7"
+ 1467 10d0 00        		byte	$00
+ 1468 10d1 0044 4643 	RNDFC:	ascii	"DFC"
+ 1469 10d5 00        		byte	$00
+ 1470 10d6 5043      	RNPC:	ascii	"PC"
+ 1471 10d8 00        		byte	$00
+ 1472 10d9 0053 4643 	RNSFC:	ascii	"SFC"
+ 1473 10dd 00        		byte	$00
+ 1474 10de 5352      	RNSR:	ascii	"SR"
+ 1475 10e0 00        		byte	$00
+ 1476 10e1 0053 5350 	RNSSP:	ascii	"SSP"
+ 1477 10e5 00        		byte	$00
+ 1478 10e6 5642 52   	RNVBR:	ascii	"VBR"
+ 1479 10e9 00        		byte	$00
+ 1480               	
+ 1481 10ea 0000 0000 	FCTAB:	DC.L	FCN0,FCN1,FCN2,FCN3
+ 1481      0000 0000 
+ 1481      0000 0000 
+ 1481      0000 0000 
+ 1482 10fa 0000 0000 		DC.L	FCN4,FCN5,FCN6,FCN7
+ 1482      0000 0000 
+ 1482      0000 0000 
+ 1482      0000 0000 
+ 1483 110a 0000 0000 	FCTAB2:	DC.L	FCN0,FCN1,FCN2,FCN3
+ 1483      0000 0000 
+ 1483      0000 0000 
+ 1483      0000 0000 
+ 1484 111a 0000 0000 		DC.L	FCN4,FCN5,FCN6,FCN7A
+68K GAS  mon.S 			page 30
+
+
+ 1484      0000 0000 
+ 1484      0000 0000 
+ 1484      0000 0000 
+ 1485 112a 4643 3D30 	FCN0:	ascii	"FC=0 "
+ 1485      20
+ 1486 112f 00        		byte	$00
+ 1487 1130 5573 6572 	FCN1:	ascii	"User Data "
+ 1487      2044 6174 
+ 1487      6120 
+ 1488 113a 00        		byte	$00
+ 1489 113b 0055 7365 	FCN2:	ascii	"User Program "
+ 1489      7220 5072 
+ 1489      6F67 7261 
+ 1489      6D20 
+ 1490 1149 00        		byte	$00
+ 1491 114a 4643 3D33 	FCN3:	ascii	"FC=3 "
+ 1491      20
+ 1492 114f 00        		byte	$00
+ 1493 1150 4643 3D34 	FCN4:	ascii	"FC=4 "
+ 1493      20
+ 1494 1155 00        		byte	$00
+ 1495 1156 5375 7065 	FCN5:	ascii	"Supervisor Data "
+ 1495      7276 6973 
+ 1495      6F72 2044 
+ 1495      6174 6120 
+ 1496 1166 00        		byte	$00
+ 1497 1167 0053 7570 	FCN6:	ascii	"Supervisor Program "
+ 1497      6572 7669 
+ 1497      736F 7220 
+ 1497      5072 6F67 
+ 1497      7261 6D20 
+ 1498 117b 00        		byte	$00
+ 1499 117c 496E 7465 	FCN7:	ascii	"Interrupt Acknowledge "
+ 1499      7272 7570 
+ 1499      7420 4163 
+ 1499      6B6E 6F77 
+ 1499      6C65 6467 
+ 1500 1192 00        		byte	$00
+ 1501 1193 0043 5055 	FCN7A:	ascii	"CPU "
+ 1501      20
+ 1502 1198 00        		byte	$00
+ 1503 1199 0057 7269 	G0WR:	ascii	"Write "
+ 1503      7465 20
+ 1504 11a0 00        		byte	$00
+ 1505 11a1 0052 6561 	G0RD:	ascii	"Read "
+ 1505      6420 
+ 1506 11a7 00        		byte	$00
+ 1507 11a8 2020 2849 	G0INS0:	ascii	"  (Inst="
+ 1507      6E73 743D 
+ 1508 11b0 00        		byte	$00
+ 1509 11b1 0042 7974 	G0BYTE:	ascii	"Byte "
+ 1509      6520 
+ 1510 11b7 00        		byte	$00
+ 1511 11b8 576F 7264 	G0WORD:	ascii	"Word "
+ 1511      20
+ 1512 11bd 00        		byte	$00
+ 1513 11be 2074 6F20 	G0TO:	ascii	" to "
+68K GAS  mon.S 			page 31
+
+
+ 1514 11c2 00        		byte	$00
+ 1515 11c3 0066 726F 	G0FROM:	ascii	"from "
+ 1515      6D20 
+ 1516 11c9 00        		byte	$00
+ 1517 11ca 5370 6163 	G0SPC:	ascii	"Space "
+ 1517      6520 
+ 1518 11d0 00        		byte	$00
+ 1519 11d1 0020 2849 	G0IF:	ascii	" (Instruction Fetch)"
+ 1519      6E73 7472 
+ 1519      7563 7469 
+ 1519      6F6E 2046 
+ 1519      6574 6368 
+ 1520 11e6 00        		byte	$00
+ 1521 11e7 0020 2852 	G0RMW:	ascii	" (Read Modify Write)"
+ 1521      6561 6420 
+ 1521      4D6F 6469 
+ 1521      6679 2057 
+ 1521      7269 7465 
+ 1522 11fc 00        		byte	$00
+ 1523               	
+ 1524               		;; Stack frame size (WORD) for each format
+ 1525               	FMTLEN:
+ 1526 11fd 04        		DC.B	4		; 0000 (68010,68020,SCC68070)
+ 1527 11fe 04        		DC.B	4		; 0001 Throw Away (68020)
+ 1528 11ff 06        		DC.B	6		; 0010 (68020)
+ 1529 1200 06        		DC.B	6		; 0011
+ 1530 1201 08        		DC.B	8		; 0100
+ 1531 1202 00        		DC.B	0		; 0101
+ 1532 1203 00        		DC.B	0		; 0110
+ 1533 1204 1E        		DC.B	30		; 0111
+ 1534 1205 1D        		DC.B	29		; 1000 Bus Error, Address Error (68010)
+ 1535 1206 0A        		DC.B	10		; 1001 Coprocessor Midinstruction (68020)
+ 1536 1207 10        		DC.B	16		; 1010 Short Bus Fault (68020,68030)
+ 1537 1208 2E        		DC.B	46		; 1011 Long Bus Fault (68020,68030)
+ 1538 1209 0C        		DC.B	12		; 1100 Bus Error (CPU32)
+ 1539 120a 00        		DC.B	0		; 1101
+ 1540 120b 00        		DC.B	0		; 1110
+ 1541 120c 11        		DC.B	17		; 1111 (SCC68070)
+ 1542               	
+ 1543               	
+ 1544 120d 00        		ALIGN	2
+ 1545               	
+ 1546               	
+ 1547               	;;;
+ 1548               	;;;	UART Console Driver
+ 1549               	;;;
+ 1550               	
+ 1551               	INIT:
+ 1552               		;; Initialize PIC command request table
+ 1553               		;; and clear console input buffer control variables
+ 1554 120e 41F8 0100 		LEA	SHAD_M,A0
+ 1555 1212 303C 0000 		MOVE	#(req_e-SHAD_M)-1,D0
+ 1556               	shad_0:
+ 1557 1216 4218      		CLR.B	(A0)+
+ 1558 1218 51C8 FFFC 		DBF	D0,shad_0
+ 1559 121c 4E75      		RTS
+ 1560               	
+68K GAS  mon.S 			page 32
+
+
+ 1561               	con_st:
+ 1562 121e 103A EEF2 		move.b	crd_cnt,d0
+ 1563 1222 4E75      		rts
+ 1564               	
+ 1565               	; output d0 : conin character
+ 1566               	con_in:
+ 1567 1224 4A3A EEEC 		tst.b	crd_cnt
+ 1568 1228 67FA      		beq.s	con_in
+ 1569               	
+ 1570               		; disable interrupt
+ 1571 122a 40E7      		move sr,-(a7)		; save status register
+ 1572 122c 007C 0700 		or.w #$0700,sr		; disable interrupt
+ 1573               	
+ 1574 1230 48E7 4080 		movem.l	d1/a0,-(a7)	;push d1,a0
+ 1575               	
+ 1576 1234 41FA EFCA 		lea	crd_buf,a0	; a0 = crd_buf
+ 1577 1238 4281      		clr.l	d1
+ 1578 123a 123A EED7 		move.b	crd_rp,d1	; d1 = crd_rp
+ 1579 123e 1030 1800 		move.b	0(a0,d1),d0	; d0 <- crd_buf[d1]
+ 1580               	
+ 1581 1242 5201      		addq.b	#1,d1		; crd_rp++
+ 1582 1244 0201 007F 		andi.b	#$7f,d1
+ 1583 1248 13C1 0000 		move.b	d1,crd_rp
+ 1583      0000 
+ 1584               	
+ 1585 124e 5339 0000 		subq.b	#1,crd_cnt
+ 1585      0000 
+ 1586               	
+ 1587 1254 4CDF 0102 		movem.l	(a7)+,d1/a0	 ;pop a0,d1
+ 1588               	
+ 1589               		; enable interrupt
+ 1590 1258 46DF      		move	(a7)+,sr
+ 1591 125a 4E75      		rts
+ 1592               	
+ 1593               	; input d0 : conout character
+ 1594               	con_out:
+ 1595 125c 48E7 C000 		movem.l	d0/d1,-(a7)	;push d0,d1
+ 1596 1260 1200      		move.b	d0,d1
+ 1597               	cout_1:
+ 1598 1262 40E7      		move sr,-(a7)		; save status register
+ 1599 1264 007C 0700 		or.w #$0700,sr		; disable interrupt
+ 1600               	
+ 1601 1268 6100 0030 		bsr	CONOUT
+ 1602 126c 46DF      		move	(a7)+,sr
+ 1603               	
+ 1604 126e 8000      		or.b	d0,d0
+ 1605 1270 6706      		beq.s	end_cout
+ 1606 1272 1001      		move.b	d1,d0
+ 1607 1274 6000 FFEC 		bra	cout_1
+ 1608               	
+ 1609               	end_cout:
+ 1610 1278 4CDF 0003 		movem.l	(a7)+,d0/d1	;pop d1, d0
+ 1611 127c 4E75      		rts
+ 1612               	
+ 1613               	;----------------------------------------------------------------------------------
+ 1614               	;	ORG	SHAD_M
+ 1615               	;
+68K GAS  mon.S 			page 33
+
+
+ 1616               	;			   ; offset:
+ 1617               	;UREQ_COM:	DS.B	1	; 0: monitor CONIN/CONOUT request command
+ 1618               	;UNI_CHR:	DS.B	1	; 1: charcter (CONIN/CONOUT) or number of strings
+ 1619               	;STR_addr	DS.L	1	; 2: string address
+ 1620               	;--------------------------------------------------------------------------------
+ 1621               	;CREQ_COM:	DS.B	1	; 6: PIC function CONIN/CONOUT request command
+ 1622               	;CBI_CHR:	DS.B	1	; 7: charcter or return status
+ 1623               	;disk_drive:	DS.B	1	; 8
+ 1624               	;blocks		DS.B	1	; 9
+ 1625               	;lba:		DS.L	1	; A,B,C,D
+ 1626               	;dma:		DS.L	1	; E,F,10,11
+ 1627               	;req_e:
+ 1628               	
+ 1629               	CONIN:
+ 1630 127e 13FC 0009 		move.b	#REQ_CONIN1,UREQ_COM	; set CONIB request
+ 1630      0000 0000 
+ 1631               	
+ 1632               	cin0:
+ 1633 1286 1039 0008 		move.b	PIC_REQ,d0		; request conin to PIC. Memory $80000 read
+ 1633      0000 
+ 1634               	cin1:
+ 1635 128c 103A EE72 		move.b	UREQ_COM,d0
+ 1636               	;	or.b	d0,d0
+ 1637 1290 6600 FFFA 		bne	cin1
+ 1638               		
+ 1639               		; get character or status
+ 1640 1294 103A EE6B 		move.b	UNI_CHR,d0
+ 1641 1298 4E75      		RTS
+ 1642               	
+ 1643               	CONOUT:
+ 1644 129a 13FC 000A 		move.b	#REQ_CONOUT1,UREQ_COM	; set CONOUT request
+ 1644      0000 0000 
+ 1645 12a2 13C0 0000 		move.b	d0,UNI_CHR		; set output character
+ 1645      0000 
+ 1646 12a8 6000 FFDC 		bra	cin0
+ 1647               	
+ 1648               	ROM_E:
+ 1649               	
+ 1650               	;;;
+ 1651               	;;; Work area
+ 1652               	;;;
+ 1653               	
+ 1654               	
+ 1655               	;WORK_B	EQU	(ROM_E+16) & $fffffff0
+ 1656               	;
+ 1657               	;	ORG	WORK_B
+ 1658 12ac 0000 0000 		ds.b	((ROM_E+16)&$fff0)-ROM_E
+ 1659               	
+ 1660               	
+ 1661 12b0 0000 0000 	INBUF:	DS.B	BUFLEN		; Line input buffer
+ 1661      0000 0000 
+ 1661      0000 0000 
+ 1661      0000 0000 
+ 1661      0000 0000 
+ 1662 12c8 0000 0000 	DSADDR:	DS.L	1		; DUMP start address
+ 1663 12cc 0000 0000 	DEADDR:	DS.L	1
+ 1664 12d0 00        	DSTATE:	DS.B	1
+68K GAS  mon.S 			page 34
+
+
+ 1665 12d1 00        		ALIGN	2
+ 1666 12d2 0000 0000 	GADDR:	DS.L	1
+ 1667 12d6 0000 0000 	SADDR:	DS.L	1		; SET address
+ 1668 12da 00        	HEXMOD:	DS.B	1		; HEX file mode
+ 1669 12db 00        	RECTYP:	DS.B	1		; Record type
+ 1670 12dc 00        	PSPEC:	DS.B	1		; Processor spec.
+ 1671 12dd 00        		ALIGN	2
+ 1672               	
+ 1673               	REG_B:
+ 1674 12de 0000 0000 	REGPC:	DS.L	1
+ 1675               	
+ 1676 12e2 0000 0000 	REGD0:	DS.L	1
+ 1677 12e6 0000 0000 	REGD1:	DS.L	1
+ 1678 12ea 0000 0000 	REGD2:	DS.L	1
+ 1679 12ee 0000 0000 	REGD3:	DS.L	1
+ 1680 12f2 0000 0000 	REGD4:	DS.L	1
+ 1681 12f6 0000 0000 	REGD5:	DS.L	1
+ 1682 12fa 0000 0000 	REGD6:	DS.L	1
+ 1683 12fe 0000 0000 	REGD7:	DS.L	1
+ 1684               	
+ 1685 1302 0000 0000 	REGA0:	DS.L	1
+ 1686 1306 0000 0000 	REGA1:	DS.L	1
+ 1687 130a 0000 0000 	REGA2:	DS.L	1
+ 1688 130e 0000 0000 	REGA3:	DS.L	1
+ 1689 1312 0000 0000 	REGA4:	DS.L	1
+ 1690 1316 0000 0000 	REGA5:	DS.L	1
+ 1691 131a 0000 0000 	REGA6:	DS.L	1
+ 1692 131e 0000 0000 	REGA7:	DS.L	1		; USP
+ 1693               	
+ 1694 1322 0000 0000 	REGSSP:	DS.L	1
+ 1695 1326 0000      	REGSR:	DS.W	1
+ 1696 1328 0000 0000 	REGVBR:	DS.L	1
+ 1697 132c 00        	REGSFC:	DS.B	1
+ 1698 132d 00        	REGDFC:	DS.B	1
+ 1699               	
+ 1700 132e 0000 0000 	GR0BUF:	DS.W	46-4		; Group 0 exception
+ 1700      0000 0000 
+ 1700      0000 0000 
+ 1700      0000 0000 
+ 1700      0000 0000 
+ 1701 1382 0000      	REGFV:	DS.W	1		; Format / Vector offset
+ 1702               	REG_E:
+ 1703               	
+ 1704               	;STACK:		EQU	(REG_E+$200) & $ffffff00
+ 1705               	;USTACK:	EQU	(REG_E+$300) & $ffffff00
+ 1706 1384 0000 0000 		ds.b	((REG_E+$200)&$ff00)-REG_E
+ 1706      0000 0000 
+ 1706      0000 0000 
+ 1706      0000 0000 
+ 1706      0000 0000 
+ 1707               	STACK:
+ 1708 1500 0000 0000 		ds.b	$100
+ 1708      0000 0000 
+ 1708      0000 0000 
+ 1708      0000 0000 
+ 1708      0000 0000 
+ 1709               	USTACK:
+68K GAS  mon.S 			page 35
+
+
+ 1710               	
+ 1711               	DAT_E	equ	USTACK
+ 1712               	
+ 1713               		END
+68K GAS  mon.S 			page 36
+
+
+DEFINED SYMBOLS
+               mon.S:115    .text:00000000 INIVEC
+               mon.S:197    .text:00000100 UREQ_COM
+               mon.S:198    .text:00000101 UNI_CHR
+               mon.S:199    .text:00000102 STR_addr
+               mon.S:201    .text:00000106 CREQ_COM
+               mon.S:202    .text:00000107 CBI_CHR
+               mon.S:203    .text:00000108 disk_drive
+               mon.S:208    .text:00000112 crd_cnt
+               mon.S:209    .text:00000113 crd_rp
+               mon.S:210    .text:00000114 crd_wp
+               mon.S:218    .text:00000180 contmp_buf
+               mon.S:219    .text:00000200 crd_buf
+               mon.S:1551   .text:0000120e INIT
+               mon.S:241    .text:00000400 CSTART
+               mon.S:264    .text:0000045c WSTART
+               mon.S:305    .text:000004c8 DUMP
+               mon.S:436    .text:00000620 GO
+               mon.S:467    .text:00000664 SETM
+               mon.S:522    .text:000006fa LOADH
+               mon.S:658    .text:00000824 SAVEH
+               mon.S:787    .text:00000946 REG
+               mon.S:910    .text:00000a80 STROUT
+               mon.S:919    .text:00000a92 HEXOUT8
+               mon.S:924    .text:00000a9c HEXOUT4
+               mon.S:929    .text:00000aa6 HEXOUT2
+               mon.S:934    .text:00000ab0 HEXOUT1
+               mon.S:966    .text:00000b04 CRLF
+               mon.S:972    .text:00000b14 GETLIN
+               mon.S:1060   .text:00000bf2 IRQ5_H
+               mon.S:1119   .text:00000c98 DUMMY_H
+               mon.S:1124   .text:00000c9a NMI_H
+               mon.S:52     *ABS*:00000000 VECT_T
+               mon.S:53     *ABS*:00000400 PROG_B
+               mon.S:54     *ABS*:00000100 SHAD_M
+               mon.S:56     *ABS*:00000018 BUFLEN
+               mon.S:57     *ABS*:00000100 VECSIZ
+               mon.S:59     *ABS*:00000000 MPU_SPEC
+               mon.S:66     *ABS*:0000000d CR
+               mon.S:67     *ABS*:0000000a LF
+               mon.S:68     *ABS*:00000008 BS
+               mon.S:69     *ABS*:0000007f DEL
+               mon.S:71     *ABS*:00002004 START_FUZIX
+               mon.S:82     *ABS*:00002008 sys_base
+               mon.S:84     *ABS*:00002008 spurious
+               mon.S:85     *ABS*:0000200e unexpected
+               mon.S:86     *ABS*:00002014 bus
+               mon.S:87     *ABS*:0000201a addr
+               mon.S:88     *ABS*:00002020 illegal
+               mon.S:89     *ABS*:00002026 divzero
+               mon.S:90     *ABS*:0000202c chk
+               mon.S:91     *ABS*:00002032 trapv
+               mon.S:92     *ABS*:00002038 priv
+               mon.S:93     *ABS*:0000203e trace
+               mon.S:94     *ABS*:00002044 unimpa
+               mon.S:95     *ABS*:0000204a unimpf
+               mon.S:96     *ABS*:00002050 uninit
+68K GAS  mon.S 			page 37
+
+
+               mon.S:97     *ABS*:00002056 interrupt
+               mon.S:98     *ABS*:0000205c trap0
+               mon.S:99     *ABS*:00002062 trap1
+               mon.S:100    *ABS*:00002068 trap2
+               mon.S:101    *ABS*:0000206e trap3
+               mon.S:102    *ABS*:00002074 trap4
+               mon.S:103    *ABS*:0000207a trap5
+               mon.S:104    *ABS*:00002080 trap6
+               mon.S:105    *ABS*:00002086 trap7
+               mon.S:106    *ABS*:0000208c trap8
+               mon.S:107    *ABS*:00002092 trap9
+               mon.S:108    *ABS*:00002098 trap10
+               mon.S:109    *ABS*:0000209e trap11
+               mon.S:110    *ABS*:000020a4 trap12
+               mon.S:111    *ABS*:000020aa trap13
+               mon.S:112    *ABS*:000020b0 trap14
+               mon.S:113    *ABS*:000020b6 trap15
+               mon.S:1707   .text:00001500 STACK
+               mon.S:170    .text:000000c0 INIVECE
+               mon.S:183    *ABS*:00000001 REQ_CONIN
+               mon.S:184    *ABS*:00000002 REQ_CONOUT
+               mon.S:185    *ABS*:00000003 REQ_CONST
+               mon.S:186    *ABS*:00000004 REQ_STROUT
+               mon.S:189    *ABS*:00000009 REQ_CONIN1
+               mon.S:190    *ABS*:0000000a REQ_CONOUT1
+               mon.S:191    *ABS*:0000000b REQ_STRIN
+               mon.S:192    *ABS*:0000000c REQ_CLR_IRQ
+               mon.S:194    *ABS*:00080000 PIC_REQ
+               mon.S:204    .text:00000109 blocks
+               mon.S:205    .text:0000010a lba
+               mon.S:206    .text:0000010e dma
+               mon.S:211    .text:00000115 irq5_flg
+               mon.S:212    .text:00000116 req_e
+               mon.S:217    *ABS*:00000080 con_size
+               mon.S:221    .text:00000280 shm_end
+               mon.S:226    .text:00000280 ttyin_st
+               mon.S:1561   .text:0000121e con_st
+               mon.S:227    .text:00000284 tty_in
+               mon.S:1566   .text:00001224 con_in
+               mon.S:228    .text:00000288 tty_out
+               mon.S:1594   .text:0000125c con_out
+               mon.S:230    .text:0000028c entp_end
+               mon.S:1709   .text:00001600 DAT_E
+               mon.S:1662   .text:000012c8 DSADDR
+               mon.S:1666   .text:000012d2 GADDR
+               mon.S:1667   .text:000012d6 SADDR
+               mon.S:1668   .text:000012da HEXMOD
+               mon.S:1670   .text:000012dc PSPEC
+               mon.S:1673   .text:000012de REG_B
+               mon.S:1702   .text:00001384 REG_E
+               mon.S:255    .text:00000434 INIR0
+               mon.S:1694   .text:00001322 REGSSP
+               mon.S:1674   .text:000012de REGPC
+               mon.S:1709   .text:00001600 USTACK
+               mon.S:1692   .text:0000131e REGA7
+               mon.S:1195   .text:00000d5a PROMPT
+               mon.S:1661   .text:000012b0 INBUF
+68K GAS  mon.S 			page 38
+
+
+               mon.S:1012   .text:00000b92 SKIPSP
+               mon.S:1018   .text:00000b9e UPPER
+               mon.S:296    .text:000004bc ERR
+               mon.S:1205   .text:00000d7a ERRMSG
+               mon.S:1027   .text:00000bb4 RDHEX
+               mon.S:321    .text:000004f6 DP0
+               mon.S:1663   .text:000012cc DEADDR
+               mon.S:346    .text:00000540 DPM
+               mon.S:333    .text:0000051e DP1
+               mon.S:351    .text:0000054c DPM0
+               mon.S:366    .text:0000057c DPL
+               mon.S:360    .text:0000056e DPM1
+               mon.S:1209   .text:00000d82 DSEP0
+               mon.S:373    .text:00000592 DPL0
+               mon.S:398    .text:000005d4 DPB
+               mon.S:1212   .text:00000d86 DSEP1
+               mon.S:382    .text:000005aa DPL1
+               mon.S:390    .text:000005c4 DPL2
+               mon.S:393    .text:000005cc DPL3
+               mon.S:417    .text:00000600 DPB2
+               mon.S:415    .text:000005fc DPB1
+               mon.S:407    .text:000005ea DPB0
+               mon.S:428    .text:0000061a DPB3
+               mon.S:446    .text:0000063c G0
+               mon.S:1695   .text:00001326 REGSR
+               mon.S:1676   .text:000012e2 REGD0
+               mon.S:478    .text:00000684 SM0
+               mon.S:479    .text:00000684 SM1
+               mon.S:497    .text:000006be SM2
+               mon.S:504    .text:000006d2 SM3
+               mon.S:510    .text:000006e4 SM4
+               mon.S:534    .text:00000716 LH0
+               mon.S:603    .text:000007b2 LHS0
+               mon.S:539    .text:00000726 LH1
+               mon.S:553    .text:00000746 LHI0
+               mon.S:543    .text:0000072e LH2
+               mon.S:548    .text:0000073e LH3
+               mon.S:942    .text:00000ac6 HEXIN
+               mon.S:1669   .text:000012db RECTYP
+               mon.S:590    .text:00000790 LHI3
+               mon.S:580    .text:0000077c LHI1
+               mon.S:588    .text:0000078c LHI2
+               mon.S:597    .text:000007a6 LHIE
+               mon.S:1199   .text:00000d5e IHEMSG
+               mon.S:639    .text:000007fc LHS3
+               mon.S:629    .text:000007e6 LHS1
+               mon.S:637    .text:000007f8 LHS2
+               mon.S:648    .text:00000818 LHSE
+               mon.S:651    .text:00000820 LHSR
+               mon.S:1202   .text:00000d6c SHEMSG
+               mon.S:666    .text:0000083c SH0
+               mon.S:669    .text:00000844 SH1
+               mon.S:686    .text:00000878 SH2
+               mon.S:689    .text:0000087c SH3
+               mon.S:706    .text:000008a8 SHL
+               mon.S:701    .text:0000089c SH4
+               mon.S:1215   .text:00000d8a IHEXER
+68K GAS  mon.S 			page 39
+
+
+               mon.S:1218   .text:00000d98 SRECER
+               mon.S:711    .text:000008b2 SHL0
+               mon.S:751    .text:00000900 SHLS
+               mon.S:738    .text:000008e8 SHLI0
+               mon.S:772    .text:0000092e SHLS0
+               mon.S:796    .text:00000960 RG0
+               mon.S:874    .text:00000a30 RDUMP
+               mon.S:1306   .text:00000ec2 RNTAB
+               mon.S:798    .text:00000964 RG1
+               mon.S:805    .text:0000097c RG2
+               mon.S:871    .text:00000a2c RGE
+               mon.S:814    .text:00000996 RG3
+               mon.S:821    .text:000009aa RG30
+               mon.S:834    .text:000009d4 RG4
+               mon.S:845    .text:000009ec RG6
+               mon.S:841    .text:000009e6 RG5
+               mon.S:869    .text:00000a28 RGR
+               mon.S:859    .text:00000a18 RG7
+               mon.S:868    .text:00000a28 RG9
+               mon.S:865    .text:00000a26 RG8
+               mon.S:1222   .text:00000da6 RDTAB
+               mon.S:876    .text:00000a34 RD0
+               mon.S:882    .text:00000a46 RD00
+               mon.S:893    .text:00000a64 RD1
+               mon.S:900    .text:00000a76 RD2
+               mon.S:916    .text:00000a90 STROE
+               mon.S:946    .text:00000ace HI0
+               mon.S:962    .text:00000b00 HIR
+               mon.S:959    .text:00000afa HI1
+               mon.S:975    .text:00000b1a GL0
+               mon.S:1007   .text:00000b88 GLE
+               mon.S:995    .text:00000b62 GLB
+               mon.S:1024   .text:00000bb2 UPR
+               mon.S:1030   .text:00000bb8 RH0
+               mon.S:1049   .text:00000bf0 RHE
+               mon.S:1042   .text:00000be0 RH1
+               mon.S:1105   .text:00000c82 exit_cin
+               mon.S:1083   .text:00000c46 wa_pic
+               mon.S:1095   .text:00000c64 mv_str
+               mon.S:1146   .text:00000ce6 clr_int
+               mon.S:1141   .text:00000cd2 NMI_MSG
+               mon.S:1150   .text:00000cfa w_pic
+               mon.S:1156   .text:00000d04 G0DUMP
+               mon.S:1700   .text:0000132e GR0BUF
+               mon.S:1481   .text:000010ea FCTAB
+               mon.S:1171   .text:00000d2e G0D00
+               mon.S:1503   .text:0000119a G0WR
+               mon.S:1173   .text:00000d32 G0D01
+               mon.S:1505   .text:000011a2 G0RD
+               mon.S:1507   .text:000011a8 G0INS0
+               mon.S:1273   .text:00000e84 RDSD07
+               mon.S:1299   .text:00000ebc RDSC
+               mon.S:1677   .text:000012e6 REGD1
+               mon.S:1678   .text:000012ea REGD2
+               mon.S:1679   .text:000012ee REGD3
+               mon.S:1302   .text:00000ebe RDSCS
+               mon.S:1680   .text:000012f2 REGD4
+68K GAS  mon.S 			page 40
+
+
+               mon.S:1681   .text:000012f6 REGD5
+               mon.S:1682   .text:000012fa REGD6
+               mon.S:1683   .text:000012fe REGD7
+               mon.S:1276   .text:00000e8c RDSA07
+               mon.S:1685   .text:00001302 REGA0
+               mon.S:1686   .text:00001306 REGA1
+               mon.S:1687   .text:0000130a REGA2
+               mon.S:1688   .text:0000130e REGA3
+               mon.S:1689   .text:00001312 REGA4
+               mon.S:1690   .text:00001316 REGA5
+               mon.S:1691   .text:0000131a REGA6
+               mon.S:1280   .text:00000e96 RDSPC
+               mon.S:1284   .text:00000e9c RDSSSP
+               mon.S:1287   .text:00000ea2 RDSSR
+               mon.S:1290   .text:00000ea8 RDSVBR
+               mon.S:1696   .text:00001328 REGVBR
+               mon.S:1293   .text:00000eb0 RDSSFC
+               mon.S:1697   .text:0000132c REGSFC
+               mon.S:1296   .text:00000eb6 RDSDFC
+               mon.S:1698   .text:0000132d REGDFC
+               mon.S:1323   .text:00000f08 RNTABA
+               mon.S:1344   .text:00000f62 RNTABC
+               mon.S:1351   .text:00000f76 RNTABD
+               mon.S:1374   .text:00000fda RNTABP
+               mon.S:1381   .text:00000fee RNTABS
+               mon.S:1392   .text:00001016 RNTABV
+               mon.S:1434   .text:0000108e RNA0
+               mon.S:1436   .text:00001092 RNA1
+               mon.S:1438   .text:00001096 RNA2
+               mon.S:1440   .text:0000109a RNA3
+               mon.S:1442   .text:0000109e RNA4
+               mon.S:1444   .text:000010a2 RNA5
+               mon.S:1446   .text:000010a6 RNA6
+               mon.S:1448   .text:000010aa RNA7
+               mon.S:1399   .text:0000102a RNTABCC
+               mon.S:1452   .text:000010b2 RND0
+               mon.S:1454   .text:000010b6 RND1
+               mon.S:1456   .text:000010ba RND2
+               mon.S:1458   .text:000010be RND3
+               mon.S:1460   .text:000010c2 RND4
+               mon.S:1462   .text:000010c6 RND5
+               mon.S:1464   .text:000010ca RND6
+               mon.S:1466   .text:000010ce RND7
+               mon.S:1406   .text:0000103e RNTABDF
+               mon.S:1470   .text:000010d6 RNPC
+               mon.S:1413   .text:00001052 RNTABSF
+               mon.S:1474   .text:000010de RNSR
+               mon.S:1420   .text:00001066 RNTABSS
+               mon.S:1427   .text:0000107a RNTABVB
+               mon.S:1450   .text:000010ae RNCCR
+               mon.S:1468   .text:000010d2 RNDFC
+               mon.S:1472   .text:000010da RNSFC
+               mon.S:1476   .text:000010e2 RNSSP
+               mon.S:1478   .text:000010e6 RNVBR
+               mon.S:1485   .text:0000112a FCN0
+               mon.S:1487   .text:00001130 FCN1
+               mon.S:1489   .text:0000113c FCN2
+68K GAS  mon.S 			page 41
+
+
+               mon.S:1491   .text:0000114a FCN3
+               mon.S:1493   .text:00001150 FCN4
+               mon.S:1495   .text:00001156 FCN5
+               mon.S:1497   .text:00001168 FCN6
+               mon.S:1499   .text:0000117c FCN7
+               mon.S:1483   .text:0000110a FCTAB2
+               mon.S:1501   .text:00001194 FCN7A
+               mon.S:1509   .text:000011b2 G0BYTE
+               mon.S:1511   .text:000011b8 G0WORD
+               mon.S:1513   .text:000011be G0TO
+               mon.S:1515   .text:000011c4 G0FROM
+               mon.S:1517   .text:000011ca G0SPC
+               mon.S:1519   .text:000011d2 G0IF
+               mon.S:1521   .text:000011e8 G0RMW
+               mon.S:1525   .text:000011fd FMTLEN
+               mon.S:1556   .text:00001216 shad_0
+               mon.S:1597   .text:00001262 cout_1
+               mon.S:1643   .text:0000129a CONOUT
+               mon.S:1609   .text:00001278 end_cout
+               mon.S:1629   .text:0000127e CONIN
+               mon.S:1632   .text:00001286 cin0
+               mon.S:1634   .text:0000128c cin1
+               mon.S:1648   .text:000012ac ROM_E
+               mon.S:1664   .text:000012d0 DSTATE
+               mon.S:1701   .text:00001382 REGFV
+
+UNDEFINED SYMBOLS
+disk_track
+disk_sector
+data_dma

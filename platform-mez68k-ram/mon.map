@@ -1,0 +1,74 @@
+
+There are no discarded input sections
+
+メモリ設定
+
+名前           原点             長さ             属性
+ram              0x00000000         0x00080000         xrw
+*default*        0x00000000         0xffffffff
+
+リンカスクリプトおよびメモリマップ
+
+LOAD mon.o
+
+.text           0x00000000     0x1600
+ CREATE_OBJECT_SYMBOLS
+ *(.text .text.*)
+ .text          0x00000000     0x1600 mon.o
+                0x00000000                INIVEC
+                0x00000100                UREQ_COM
+                0x00000101                UNI_CHR
+                0x00000102                STR_addr
+                0x00000106                CREQ_COM
+                0x00000107                CBI_CHR
+                0x00000108                disk_drive
+                0x00000112                crd_cnt
+                0x00000113                crd_rp
+                0x00000114                crd_wp
+                0x00000180                contmp_buf
+                0x00000200                crd_buf
+                0x00000400                CSTART
+                0x00000458                WSTART
+                0x000004c4                DUMP
+                0x0000061c                GO
+                0x0000065a                SETM
+                0x000006f0                LOADH
+                0x00000822                SAVEH
+                0x00000948                REG
+                0x00000a86                STROUT
+                0x00000a98                HEXOUT8
+                0x00000aa2                HEXOUT4
+                0x00000aac                HEXOUT2
+                0x00000ab6                HEXOUT1
+                0x00000b0a                CRLF
+                0x00000b1a                GETLIN
+                0x00000bf8                IRQ5_H
+                0x00000ca2                DUMMY_H
+                0x00000ca4                NMI_H
+                0x00001216                INIT
+
+.data           0x00001600        0x0
+                0x00001600                        _data = .
+ *(.got.plt)
+ *(.got)
+ *(.shdata)
+ *(.data .data.*)
+ .data          0x00001600        0x0 mon.o
+                0x00001600                        _edata = .
+
+.bss            0x00001600        0x0
+                0x00001600                        . = ALIGN (0x4)
+                0x00001600                        __bss_start = .
+ *(.shbss)
+ *(.bss .bss.*)
+ .bss           0x00001600        0x0 mon.o
+ *(COMMON)
+                0x00001600                        _end = ALIGN (0x8)
+                0x00001600                        __end = _end
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+OUTPUT(mon.elf elf32-m68k)

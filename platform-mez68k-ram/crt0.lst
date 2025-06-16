@@ -1,0 +1,214 @@
+68K GAS  crt0.S 			page 1
+
+
+   1               	/*
+   2               	 *	We provide a vector table for the ROM forwading. It's not in the
+   3               	 *	68000 format/order though.
+   4               	 */
+   5               			#include "../../cpu-68000/kernel-68000.def"
+   6               	
+   7               			.globl __end
+   8               			.globl __bss_start
+   9               			.globl start
+  10               	
+  11               			.globl  cpu_type
+  12               	.mri 1
+  13               	
+  14               	ssp	equ	$2000
+  15               	
+  16               	vectors:
+  17 0000 AA55 6800 			long	$AA556800		; boot signature
+  18               	;		long	start			; Start address
+  19 0004 6000 00B6 			bra	start			; Start address
+  20 0008 4EF9 0000 			jmp	e_spurious
+  20      0000 
+  21 000e 4EF9 0000 			jmp	e_unexpected
+  21      0000 
+  22 0014 4EF9 0000 			jmp	e_bus_error
+  22      0000 
+  23 001a 4EF9 0000 			jmp	e_addr_error
+  23      0000 
+  24 0020 4EFA 00CC 			jmp	do_illegal
+  25 0024 4E71      			nop				; The jump above ends up word
+  26 0026 4EF9 0000 			jmp	e_divzero
+  26      0000 
+  27 002c 4EF9 0000 			jmp	e_chk
+  27      0000 
+  28 0032 4EF9 0000 			jmp	e_trapv
+  28      0000 
+  29 0038 4EF9 0000 			jmp	e_priv
+  29      0000 
+  30 003e 4EF9 0000 			jmp	e_trace
+  30      0000 
+  31 0044 4EF9 0000 			jmp	e_unimpa
+  31      0000 
+  32 004a 4EF9 0000 			jmp	e_unimpf
+  32      0000 
+  33 0050 4EF9 0000 			jmp	e_uninit
+  33      0000 
+  34 0056 4EF9 0000 			jmp	interrupt		; jump here from PIC intervel timer interrupt
+  34      0000 
+  35 005c 4EF9 0000 			jmp	e_trap0
+  35      0000 
+  36 0062 4EF9 0000 			jmp	e_trap1
+  36      0000 
+  37 0068 4EF9 0000 			jmp	e_trap2
+  37      0000 
+  38 006e 4EF9 0000 			jmp	e_trap3
+  38      0000 
+  39 0074 4EF9 0000 			jmp	e_trap4
+  39      0000 
+68K GAS  crt0.S 			page 2
+
+
+  40 007a 4EF9 0000 			jmp	e_trap5
+  40      0000 
+  41 0080 4EF9 0000 			jmp	e_trap6
+  41      0000 
+  42 0086 4EF9 0000 			jmp	e_trap7
+  42      0000 
+  43 008c 4EF9 0000 			jmp	e_trap8
+  43      0000 
+  44 0092 4EF9 0000 			jmp	e_trap9
+  44      0000 
+  45 0098 4EF9 0000 			jmp	e_trap10
+  45      0000 
+  46 009e 4EF9 0000 			jmp	e_trap11
+  46      0000 
+  47 00a4 4EF9 0000 			jmp	e_trap12		; System call
+  47      0000 
+  48 00aa 4EF9 0000 			jmp	e_trap13
+  48      0000 
+  49 00b0 4EF9 0000 			jmp	e_trap14
+  49      0000 
+  50 00b6 4EF9 0000 			jmp	e_trap15
+  50      0000 
+  51               	
+  52               	start:
+  53               	;		lea.l udata_block+UBLOCK_SIZE,a7
+  54 00bc 4FF8 2000 			lea	ssp,a7
+  55 00c0 007C 0700 			or #$0700,sr
+  56               	
+  57 00c4 207C 0000 			move.l #__bss_start,a0
+  57      0000 
+  58 00ca 203C 0000 			move.l #__end,d0
+  58      0000 
+  59 00d0 9088      			sub.l a0,d0
+  60 00d2 E488      			lsr.l #2,d0
+  61               	wipebss:
+  62 00d4 4298      			clr.l (a0)+
+  63 00d6 51C8 FFFC 			dbra d0,wipebss
+  64               	
+  65 00da 6100 0000 			bsr init_early
+  66 00de 6100 0000 			bsr init_hardware
+  67               	
+  68               	;wwp:	bra	wwp
+  69               	
+  70 00e2 6100 0000 			bsr fuzix_main
+  71 00e6 007C 0700 			or #$0700,sr
+  72 00ea 6000 FFFE 	stop:		bra stop
+  73               	
+  74               	;
+  75               	;	Based on the core code one except that we have to handle the
+  76               	;	indirect vectors.
+  77               	;
+  78               	do_illegal:
+  79 00ee 4A39 0000 			tst.b cpuprobe
+  79      0000 
+  80 00f4 6600 0040 			bne cpu_type_exit
+  81 00f8 4EF9 0000 			jmp e_illegal
+  81      0000 
+68K GAS  crt0.S 			page 3
+
+
+  82               	
+  83               	cpu_type:
+  84 00fe 40E7      			move.w sr,-(sp)
+  85 0100 46FC 2700 			move #$2700,sr		; disable interrupts
+  86 0104 13FC 0001 			move.b #1,cpuprobe
+  86      0000 0000 
+  87 010c 224F      			move.l a7,a1
+  88 010e 7000      			moveq #0,d0
+  89               			save
+  90               			chip 68010
+  91 0110 4E7A 1801 			movec vbr,d1		; faults on a 68000
+  92 0114 700A      			moveq #10,d0
+  93               			chip 68020
+  94 0116 4E7A 1002 			movec cacr,d1		; faults on a 68000 and 010
+  95 011a 13FC 0001 			move.b #1,cpu_has_icache
+  95      0000 0000 
+  96 0122 7014      			moveq #20,d0
+  97               			chip 68040
+  98 0124 4E7A 1004 			movec itt0,d1		; faults on 68020/30
+  99 0128 7028      			moveq #40,d0
+ 100               			chip 68060
+ 101 012a 4E7A 1808 			movec pcr,d1		; faults on all but 68060
+ 102 012e 703C      			moveq #60,d0
+ 103 0130 4239 0000 			clr.b cpuprobe
+ 103      0000 
+ 104               			restore
+ 105               	cpu_type_exit:
+ 106 0136 2E49      			move.l a1,a7
+ 107 0138 4239 0000 			clr.b cpuprobe
+ 107      0000 
+ 108 013e 13C0 0000 			move.b d0,cpu_has_trapvec
+ 108      0000 
+ 109 0144 46DF      			move (sp)+,sr
+ 110 0146 4E75      			rts
+ 111               	
+ 112               	.area data
+ 113               	
+ 114 0000 00        	cpuprobe:	byte 0
+68K GAS  crt0.S 			page 4
+
+
+DEFINED SYMBOLS
+              crt0.S:52     .text:000000bc start
+              crt0.S:83     .text:000000fe cpu_type
+                            *ABS*:00002000 ssp
+              crt0.S:16     .text:00000000 vectors
+              crt0.S:78     .text:000000ee do_illegal
+              crt0.S:61     .text:000000d4 wipebss
+              crt0.S:72     .text:000000ea stop
+              crt0.S:114    .data:00000000 cpuprobe
+              crt0.S:105    .text:00000136 cpu_type_exit
+              crt0.S:112    .text:00000148 .area
+
+UNDEFINED SYMBOLS
+__end
+__bss_start
+e_spurious
+e_unexpected
+e_bus_error
+e_addr_error
+e_divzero
+e_chk
+e_trapv
+e_priv
+e_trace
+e_unimpa
+e_unimpf
+e_uninit
+interrupt
+e_trap0
+e_trap1
+e_trap2
+e_trap3
+e_trap4
+e_trap5
+e_trap6
+e_trap7
+e_trap8
+e_trap9
+e_trap10
+e_trap11
+e_trap12
+e_trap13
+e_trap14
+e_trap15
+init_early
+init_hardware
+fuzix_main
+e_illegal
+cpu_has_icache
+cpu_has_trapvec
