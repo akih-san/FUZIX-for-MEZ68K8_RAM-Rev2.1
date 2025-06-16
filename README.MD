@@ -81,7 +81,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
   - [PICkitminus](http://kair.us/projects/pickitminus/)
 
-### CPLDへの書き込み<br>
+### ２．CPLDへの書き込み<br>
 
    CPLDには、ROMライタを使用してG16V8B/MEZ68K8_RAM2.1.jedファイルを書込みます。<br>
    使用したのは、XGecu Programmer Model TL866Ⅱ PLUSです。<br>
