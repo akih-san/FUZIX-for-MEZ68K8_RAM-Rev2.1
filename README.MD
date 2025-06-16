@@ -32,4 +32,8 @@ MEZ68K8_RAM Rev2.1では、FUZIX以外に、CP/M-68Kや68000用の[Universal Mon
 
 ## [MEZ68K8_RAM(Rev1.3)](https://github.com/akih-san/MEZ68K8_RAM)からの追加変更点
 
-１．
+１．IRQ, NMI割り込みのサポート<br>
+２．RTC(DS1307)のサポート<br>
+
+### １．IRQ, NMI割り込みのサポート
+Rev1.3では割り込みなく、最小限の機能を実現していました。Rev2.1では、オートベクターによるレベル４(IRQ)とレベル７(NMI)の割り込みをサポートします。
