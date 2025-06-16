@@ -100,8 +100,8 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 ・OSDISKS	（FUZIX関連のフォルダ）<br>
 
 　　（注意）フォルダ内に、圧縮されたDISK.zipファイルがあります。<br>
-    Gitのファイル容量制限でFUZIXのディスクイメージファイルを圧縮してあります。<br>
-    解凍したDISK.IMGファイルをコピーします。<br>
+　　　　　　Gitのファイル容量制限でFUZIXのディスクイメージファイルを圧縮してあります。<br>
+　　　　　　解凍したDISK.IMGファイルをコピーします。<br>
 
 ・BASIC68K.BIN	（スタンドアロン版BASIC）<br>
 ・UMON_68K.BIN	（ユニバーサルモニタ）<br>
