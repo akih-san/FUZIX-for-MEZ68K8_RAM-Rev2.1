@@ -32,20 +32,20 @@ MEZ68K8_RAM Rev2.1の[FUZIX](https://www.fuzix.org/)は、platform-[pico68k](htt
 
 MEZ68K8_RAM Rev2.1では、FUZIX以外に、CP/M-68Kや68000用の[Universal Monitor](https://electrelic.com/electrelic/node/1317)をサポートしていますが、詳細については、[MEZ68K8_RAM(Rev1.3)](https://github.com/akih-san/MEZ68K8_RAM)を参照してください。
 
-## [MEZ68K8_RAM(Rev1.3)](https://github.com/akih-san/MEZ68K8_RAM)からの追加変更点
+# [MEZ68K8_RAM(Rev1.3)](https://github.com/akih-san/MEZ68K8_RAM)からの追加変更点
 
 １．IRQ, NMI割り込みのサポート<br>
 ２．RTC(DS1307)のサポート<br>
 ３．グルー・ロジック
 
-### １．IRQ, NMI割り込みのサポート
+## １．IRQ, NMI割り込みのサポート
 Rev1.3では割り込みなく、最小限の機能を実現していました。Rev2.1では、オートベクターによるレベル５(IRQ)とレベル７(NMI)の割り込みをサポートします。<br>
 10msインターバルのＩＲＱ割り込みを発生させています。UARTによるキー入力は、この割り込みでCPUに取り込まれ、バッファリングされます。<br>
 CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には、NMI割り込みでモニタ（Universal Monitor）が起動します。<br>
 ただし、CP/M-68KはIRQ、NMI割り込みを使っていません。（Rev1.3相当のCP/M-68K）<br>
 その他のプログラムではNMI割り込みの表示が出ますが、何もしないで元のプログラムに復帰します。<br>
 <br>
-### ２．RTC(DS1307)のサポート
+## ２．RTC(DS1307)のサポート
 I2Cを実装し、DS1307を使ったTiny RTC moduleをサポートします。<br>
 Tiny RTC moduleはArduinoで使用可能で、[AliExpress](https://ja.aliexpress.com/?spm=a2g0o.home.logo.1.2fc55c72FX1lyE)から入手
 することができます。また、安価な互換品が出回っています。テストでは互換品を使いましたが、特に問題なく使用できました。
@@ -55,12 +55,12 @@ SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用し
 ![](photo/tiny_rtc_modules.png)
 ![](photo/tiny_rtc_modules互換品.png)
 
-### ３．グルー・ロジック
+## ３．グルー・ロジック
 SDカードアクセスの一部、割り込み、メモリアクセス関連の外部ロジックをCPLD（ATF16V8B）を使用して1chipにまとめてあります。
 使用するために、jedファイルをATF16V8Bに書き込む必要があります。
 
-## ファームウェアの書き込み
-### 1. PIC18F47Q43/Q84/Q83
+# ファームウェアの書き込み
+## 1. PIC18F47Q43/Q84/Q83
 PICへの書き込みツールを用いて、ヘキサファイルを書き込みます。<br>
 <br>
 - PIC18F47Q43 - Q43Rev2.1.hex
@@ -83,7 +83,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
   - [PICkitminus](http://kair.us/projects/pickitminus/)
 
-### ２．CPLDへの書き込み
+## ２．CPLDへの書き込み
 
    CPLDには、ROMライタを使用してG16V8B/MEZ68K8_RAM2.1.jedファイルを書込みます。<br>
    使用したのは、XGecu Programmer Model TL866Ⅱ PLUSです。<br>
@@ -92,6 +92,6 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
    ![](photo/ROM_WRITER.JPG)<br>
 （今回使用したROMライタ）
 
-### ３．μＳＤカードの作成
+## ３．μＳＤカードの作成
 
-##　FUZIXの移植手順
+#　FUZIXの移植手順
