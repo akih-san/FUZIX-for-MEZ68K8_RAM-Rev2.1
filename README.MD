@@ -3,6 +3,7 @@
 # MEZ68K8_RAM Rev2.1 for FUZIX 0.5
 
 MEZ68K8_RAM Rev2.1は[EMUZ80](https://vintagechips.wordpress.com/2022/03/05/emuz80_reference/)ボード上で動く68008メザニンボードです。
+
 ![](photo/P1030052.JPG)<br>
 （MEZ68K8_RAM Rev2.1メザニンボード）
 
