@@ -43,8 +43,6 @@ CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には
 ただし、CP/M-68KはIRQ、NMI割り込みを使っていません。（Rev1.3相当のCP/M-68K）<br>
 その他のプログラムではNMI割り込みの表示が出ますが、何もしないで元のプログラムに復帰します。<br>
 <br>
-
-
 #### ２．RTC(DS1307)のサポート
 I2Cを実装し、DS1307を使ったTiny RTC moduleをサポートします。<br>
 Tiny RTC moduleはArduinoで使用可能で、[AliExpress](https://ja.aliexpress.com/?spm=a2g0o.home.logo.1.2fc55c72FX1lyE)から入手
@@ -54,9 +52,6 @@ SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用し
 
 ![](photo/tiny_rtc_modules.png)
 ![](photo/tiny_rtc_modules互換品.png)
-
-
-
 
 #### ３．グルー・ロジック
 SDカードアクセスの一部、割り込み、メモリアクセス関連の外部ロジックをCPLD（ATF16V8B）を使用して1chipにまとめてあります。
