@@ -56,9 +56,6 @@ SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用し
 ![](photo/tiny_rtc_modules.png)
 
 
-
-
-
 ![](photo/tiny_rtc_modules互換品.png)
 
 
