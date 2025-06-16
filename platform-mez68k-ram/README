@@ -17,5 +17,3 @@ pico68k(https://hackaday.io/project/179200-68000-minimal-homebrew-computer)
 
 リアルタイムクロックは、platfoem-68knanoのds3234デバイスの実装を参考にしています。
 68knano(https://github.com/74hc595/68k-nano)
-
-git clone https://github.com/EtchedPixels/FUZIX.git
