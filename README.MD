@@ -12,12 +12,16 @@ MEZ68K8_RAM Rev2.1は[EMUZ80](https://vintagechips.wordpress.com/2022/03/05/emuz
 
 EMUZ80はMicrochip社のPIC18F47Q43/83/84を使用して、Z80を制御するシングルボードコンピュータ
 です。また、Z80の代わりにメザニンボードを装着することで、レガシーCPU（6502や、8088、V20、他）
-を動かすことが出来ます。
+を動かすことが出来ます。<br>
 UART, SPI, I2C等の制御をPICで行い、レガシーCPUの外部I/Oとして機能を提供します。
-SDカードはSPIを通して実装されています。
-
+SDカードはSPIを通して実装されています。<br>
 PICから、レガシーCPUのメモリ空間にアクセスすることで、レガシーPCのプログラムをロードする
 ことが出来るため、ROMは必要なくSRAMでプログラムを動作させることが出来ます。
+
+
+（EMUZ80、MEZ68K8_RAM、RTCモジュール、SDカードモジュール）
+![](photo/P1030046.JPG)<br>
+
 
 MEZ68K8_RAM Rev2.1の[FUZIX](https://www.fuzix.org/)は、platform-[pico68k](https://hackaday.io/project/179200-68000-minimal-homebrew-computer)をベースにポーティングを行いました。
 
