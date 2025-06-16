@@ -51,8 +51,9 @@ Tiny RTC moduleはArduinoで使われており、[AliExpress](https://ja.aliexpr
 
 
 (Tiny RTC module)
-
 ![](photo/tiny_rtc_modules.png)
 
 
+(Tiny RTC module互換品)
+![](photo/tiny_rtc_modules互換品.png)
 
