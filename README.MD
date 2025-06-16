@@ -46,5 +46,13 @@ CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には
 <br>
 
 ### ２．RTC(DS1307)のサポート
-I2Cを実装し、DS1307を使ったRTCモジュールをサポートします。
+I2Cを実装し、DS1307を使ったTiny RTC moduleをサポートします。<br>
+Tiny RTC moduleはArduinoで使われており、[AliExpress](https://ja.aliexpress.com/?spm=a2g0o.home.logo.1.2fc55c72FX1lyE)から入手
+することができます。また、安価な互換品が出回っています。テストでは互換品を使いましたが、特に問題なく使用できました。
+
+
+(Tiny RTC module)
+![](photo/tiny rtc modules.png)
+
+
 
