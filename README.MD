@@ -104,9 +104,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 　　　　　　解凍したDISK.IMGファイルをコピーします。<br>
 
 ・BASIC68K.BIN	（スタンドアロン版BASIC）<br>
-・UMON_68K.BIN	（ユニバーサルモニタ）<br>
-
-
+・UMON_68K.BIN	（ユニバーサルモニタ）
 
 #　FUZIX 0.5の移植手順
 
