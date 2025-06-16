@@ -36,14 +36,14 @@ MEZ68K8_RAM Rev2.1では、FUZIX以外に、CP/M-68Kや68000用の[Universal Mon
 ２．RTC(DS1307)のサポート<br>
 ３．グルー・ロジック
 
-#### １．IRQ, NMI割り込みのサポート
+### １．IRQ, NMI割り込みのサポート
 Rev1.3では割り込みなく、最小限の機能を実現していました。Rev2.1では、オートベクターによるレベル５(IRQ)とレベル７(NMI)の割り込みをサポートします。<br>
 10msインターバルのＩＲＱ割り込みを発生させています。UARTによるキー入力は、この割り込みでCPUに取り込まれ、バッファリングされます。<br>
 CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には、NMI割り込みでモニタ（Universal Monitor）が起動します。<br>
 ただし、CP/M-68KはIRQ、NMI割り込みを使っていません。（Rev1.3相当のCP/M-68K）<br>
 その他のプログラムではNMI割り込みの表示が出ますが、何もしないで元のプログラムに復帰します。<br>
 <br>
-#### ２．RTC(DS1307)のサポート
+### ２．RTC(DS1307)のサポート
 I2Cを実装し、DS1307を使ったTiny RTC moduleをサポートします。<br>
 Tiny RTC moduleはArduinoで使用可能で、[AliExpress](https://ja.aliexpress.com/?spm=a2g0o.home.logo.1.2fc55c72FX1lyE)から入手
 することができます。また、安価な互換品が出回っています。テストでは互換品を使いましたが、特に問題なく使用できました。
@@ -53,6 +53,31 @@ SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用し
 ![](photo/tiny_rtc_modules.png)
 ![](photo/tiny_rtc_modules互換品.png)
 
-#### ３．グルー・ロジック
+### ３．グルー・ロジック
 SDカードアクセスの一部、割り込み、メモリアクセス関連の外部ロジックをCPLD（ATF16V8B）を使用して1chipにまとめてあります。
 使用するために、jedファイルをATF16V8Bに書き込む必要があります。
+
+## ファームウェアの書き込み
+### 1. PIC18F47Q43/Q84/Q83
+PICへの書き込みツールを用いて、ヘキサファイルを書き込みます。<br>
+<br>
+- PIC18F47Q43 - Q43Rev2.1.hex
+- PIC18F47Q84 - Q84Rev2.1.hex
+- PIC18F47Q83 - Q83Rev2.1.hex
+<br>
+＜注意点＞<br>
+EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外した状態でPICへの書き込みを行います。
+メザニンボードを装着しての書き込みは、かなりの高確率で失敗します。もしくは、PICに書き込めるライターを使用します。<br>
+<br>
+＜使用確認した書き込みツール＞<br>
+<br>
+- snap(マイクロチップ社の書き込みツール)<br>
+
+  - [snap](https://www.microchip.com/en-us/development-tool/PG164100)
+
+<br>
+- PICkit3（または互換ツール）<br><br>
+  PICkitminus書き込みソフトを用いて、書き込むことが出来ます。以下で入手できます。<br>
+
+  - [PICkitminus](http://kair.us/projects/pickitminus/)
+<br>
