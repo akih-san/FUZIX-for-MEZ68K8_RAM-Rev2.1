@@ -41,9 +41,8 @@ Rev1.3では割り込みなく、最小限の機能を実現していました�
 CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には、NMI割り込みでモニタ（Universal Monitor）が起動します。<br>
 ただし、CP/M-68KはIRQ、NMI割り込みを使っていません。（Rev1.3相当のCP/M-68K）
 その他のプログラムではNMI割り込みの表示が出ますが、何もしないで元のプログラムに復帰します。<br>
-
-
 <br>
+
 
 ### ２．RTC(DS1307)のサポート
 I2Cを実装し、DS1307を使ったTiny RTC moduleをサポートします。<br>
@@ -52,7 +51,7 @@ Tiny RTC moduleはArduinoで使われており、[AliExpress](https://ja.aliexpr
 
 
 (Tiny RTC module)
-![](photo/tiny rtc modules.png)
+![](photo/tiny_rtc_modules.png)
 
 
 
