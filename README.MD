@@ -80,4 +80,12 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
   PICkitminus書き込みソフトを用いて、書き込むことが出来ます。以下で入手できます。<br>
 
   - [PICkitminus](http://kair.us/projects/pickitminus/)
-<br>
+
+### CPLDへの書き込み<br>
+
+   CPLDには、ROMライタを使用してG16V8B/MEZ68K8_RAM2.1.jedファイルを書込みます。<br>
+   使用したのは、XGecu Programmer Model TL866Ⅱ PLUSです。<br>
+   少し古いですが、問題なく書き込みが出来ました。XGecu Official Siteは[こちら](https://xgecu.myshopify.com/)<br>
+
+   ![](photo/ROM_WRITER.JPG)<br>
+（今回使用したROMライタ）
