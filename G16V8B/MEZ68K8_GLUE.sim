@@ -1,0 +1,84 @@
+%SIGNAL
+PIN   2 =  A19 
+PIN   6 =  ASX 
+PIN  14 =  CEX 
+PIN  13 =  DTACK 
+PIN   3 =  FC0 
+PIN   4 =  FC1 
+PIN   5 =  FC2 
+PIN  17 =  IPL02X 
+PIN  16 =  IPL1X 
+PIN   9 =  IRQ 
+PIN   7 =  MISO 
+PIN  11 =  NMI 
+PIN  18 =  REQ 
+PIN   8 =  RW 
+PIN  12 =  SO 
+PIN   1 =  SSX 
+PIN  19 =  VPAX 
+PIN  15 =  WEX 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+CEX =>
+    ASX
+
+DTACK =>
+    ASX
+
+IACK =>
+    FC0 & FC1 & FC2
+
+IPL02X =>
+    !IRQ & !NMI
+
+IPL1X =>
+    !NMI
+
+REQ =>
+    A19 & !FC0
+  # A19 & !FC1
+  # A19 & !FC2
+
+SO =>
+    MISO
+
+SO.oe  =>
+    !SSX
+
+VPAX =>
+    !FC0
+  # !FC1
+  # !FC2
+  # IPL02X
+  # ASX
+
+WEX =>
+    A19
+  # RW
+
+CEX.oe  =>
+    1 
+
+DTACK.oe  =>
+    1 
+
+IPL02X.oe  =>
+    1 
+
+IPL1X.oe  =>
+    1 
+
+REQ.oe  =>
+    1 
+
+VPAX.oe  =>
+    1 
+
+WEX.oe  =>
+    1 
+
+%END

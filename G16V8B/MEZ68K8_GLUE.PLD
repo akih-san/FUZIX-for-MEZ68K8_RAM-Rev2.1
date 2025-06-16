@@ -1,0 +1,49 @@
+Name            MEZ68K8_RAM2.1;
+Partno          MEZ68K8_GLUE;
+Revision        1;
+Date            04/02/2025;
+Designer        A. HONDA;
+Company         Hobby;
+Location        None;
+Assembly        None;
+Device          g16v8;
+
+/* Input */
+PIN 1  = SSX;			/* SPI_SS */
+PIN 2  = A19;
+PIN 3  = FC0;
+PIN 4  = FC1;
+PIN 5  = FC2;
+PIN 6  = ASX;               /* address strobe */
+PIN 7  = MISO;
+PIN 8  = RW;
+PIN 9  = IRQ;
+PIN 11 = NMI;
+
+/*
+ * Outputs
+ */
+
+PIN 19 = VPAX;          /* auto vector request */
+PIN 18 = REQ;           /* PIC invoke request */
+PIN 17 = IPL02X;        /* IPL0_2 */
+PIN 16 = IPL1X;         /* IPL1 */
+PIN 15 = WEX;           /* SRAM #WE */
+PIN 14 = CEX;           /* SRAM #CE */
+PIN 13 = DTACK;         /* DTACK */
+PIN 12 = SO;            /* MISO output */
+
+/* logic */
+IACK      = FC0 & FC1 & FC2;
+
+
+CEX       = ASX;
+WEX       = A19 # RW;
+REQ       = A19 & !IACK;
+DTACK     = ASX;
+VPAX      = !IACK # IPL02X # ASX;
+IPL02X    = !IRQ & !NMI;
+IPL1X     = !NMI;
+SO        = MISO;
+SO.oe = !SSX;
+
