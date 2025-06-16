@@ -25,6 +25,9 @@ PICから、レガシーCPUのメモリ空間にアクセスすることで、�
 
 MEZ68K8_RAM Rev2.1の[FUZIX](https://www.fuzix.org/)は、platform-[pico68k](https://hackaday.io/project/179200-68000-minimal-homebrew-computer)をベースにポーティングを行いました。
 
+# FUZIX起動画面
+![](photo/FUZIX起動画面.png)<br>
+
 
 リアルタイムクロックは、platfoem-[68knano](https://github.com/74hc595/68k-nano)のds3234デバイスの実装を参考にしています。
 
@@ -81,7 +84,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
   - [PICkitminus](http://kair.us/projects/pickitminus/)
 
-### ２．CPLDへの書き込み<br>
+### ２．CPLDへの書き込み
 
    CPLDには、ROMライタを使用してG16V8B/MEZ68K8_RAM2.1.jedファイルを書込みます。<br>
    使用したのは、XGecu Programmer Model TL866Ⅱ PLUSです。<br>
@@ -89,3 +92,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
    ![](photo/ROM_WRITER.JPG)<br>
 （今回使用したROMライタ）
+
+### ３．μＳＤカードの作成
+
+##　FUZIXの移植手順
