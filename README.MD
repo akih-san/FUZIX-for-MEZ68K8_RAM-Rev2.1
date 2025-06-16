@@ -107,5 +107,5 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 ・UMON_68K.BIN	（ユニバーサルモニタ）
 
 # FUZIX 0.5の移植手順
+[FUZIX](https://www.fuzix.org/)の移植はLinuxで行います。68000版の移植にはm68k-elf-gccが必要です。
 
-platform-mez68k-ram
