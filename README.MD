@@ -5,7 +5,7 @@
 MEZ68K8_RAM Rev2.1は[EMUZ80](https://vintagechips.wordpress.com/2022/03/05/emuz80_reference/)ボード上で動く68008メザニンボードです。
 
 ![](photo/P1030052.JPG)<br>
-（MEZ68K8_RAM Rev2.1メザニンボード）
+          （MEZ68K8_RAM Rev2.1メザニンボード）
 
 
 EMUZ80はMicrochip社のPIC18F47Q43/83/84を使用して、Z80を制御するシングルボードコンピュータ
