@@ -34,8 +34,9 @@ MEZ68K8_RAM Rev2.1では、FUZIX以外に、CP/M-68Kや68000用の[Universal Mon
 
 １．IRQ, NMI割り込みのサポート<br>
 ２．RTC(DS1307)のサポート<br>
+３．グルー・ロジック
 
-### １．IRQ, NMI割り込みのサポート
+#### １．IRQ, NMI割り込みのサポート
 Rev1.3では割り込みなく、最小限の機能を実現していました。Rev2.1では、オートベクターによるレベル５(IRQ)とレベル７(NMI)の割り込みをサポートします。<br>
 10msインターバルのＩＲＱ割り込みを発生させています。UARTによるキー入力は、この割り込みでCPUに取り込まれ、バッファリングされます。<br>
 CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には、NMI割り込みでモニタ（Universal Monitor）が起動します。<br>
@@ -44,7 +45,7 @@ CTRL-Qのキー入力でNMI割り込みが発生します。FUZIX動作時には
 <br>
 
 
-### ２．RTC(DS1307)のサポート
+#### ２．RTC(DS1307)のサポート
 I2Cを実装し、DS1307を使ったTiny RTC moduleをサポートします。<br>
 Tiny RTC moduleはArduinoで使用可能で、[AliExpress](https://ja.aliexpress.com/?spm=a2g0o.home.logo.1.2fc55c72FX1lyE)から入手
 することができます。また、安価な互換品が出回っています。テストでは互換品を使いましたが、特に問題なく使用できました。
@@ -58,3 +59,6 @@ SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用し
 (Tiny RTC module互換品)
 ![](photo/tiny_rtc_modules互換品.png)
 
+#### グルー・ロジック
+SDカードアクセスの一部、割り込み、メモリアクセス関連の外部ロジックをCPLD（ATF16V8B）を使用して1chipにまとめてあります。
+使用するために、jedファイルをATF16V8Bに書き込む必要があります。
