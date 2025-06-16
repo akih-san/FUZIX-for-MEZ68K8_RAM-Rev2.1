@@ -52,11 +52,11 @@ Tiny RTC moduleはArduinoで使用可能で、[AliExpress](https://ja.aliexpress
 SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用しています。
 
 
-(Tiny RTC module)
+
 ![](photo/tiny_rtc_modules.png)
 
 
-(Tiny RTC module互換品)
+
 ![](photo/tiny_rtc_modules互換品.png)
 
 #### ３．グルー・ロジック
