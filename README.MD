@@ -124,8 +124,8 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 <br>
 　「MPLAB® X Integrated Development Environment (IDE)」<br>
 <br>
-　を使っています。（MPLAB X IDE v6.20）コンパイラは、XC8を使用しています。<br>
-（https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide）<br>
+　を使っています。[MPLAB X IDE v6.25](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide)コンパイラは、XC8を使用しています。<br>
+
 <br>
 ・universal moniter 68000、及びEnhanced 68k BASICは、Macro Assembler AS V1.42を<br>
 　使用してバイナリを作成しています。<br>
@@ -135,4 +135,31 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 　＜FatFs - Generic FAT Filesystem Module＞<br>
 　http://elm-chan.org/fsw/ff/00index_e.html<br>
 <br>
+
+# 参考
+＜EMUZ80＞<br>
+EUMZ80はZ80CPUとPIC18F47Q43のDIP40ピンIC2つで構成されるシンプルなコンピュータです。<br>
+（電脳伝説 - EMUZ80が完成）  <br>
+https://vintagechips.wordpress.com/2022/03/05/emuz80_reference  <br>
+<br>
+＜SuperMEZ80＞<br>
+SuperMEZ80は、EMUZ80にSRAMを追加しZ80をノーウェイトで動かすことができます。<br>
+<br>
+＜SuperMEZ80＞<br>
+https://github.com/satoshiokue/SuperMEZ80<br>
+<br>
+＜＠hanyazouさんのソース＞<br>
+https://github.com/hanyazou/SuperMEZ80/tree/mez80ram-cpm<br>
+<br>
+＜@electrelicさんのユニバーサルモニタ＞<br>
+https://electrelic.com/electrelic/node/1317<br>
+
+＜オレンジピコショップ＞  <br>
+オレンジピコさんでEMUZ80、その他メザニンボードの購入できます。<br>
+<br>
+https://store.shopping.yahoo.co.jp/orangepicoshop/pico-a-051.html<br>
+https://store.shopping.yahoo.co.jp/orangepicoshop/pico-a-061.html<br>
+https://store.shopping.yahoo.co.jp/orangepicoshop/pico-a-062.html<br>
+https://store.shopping.yahoo.co.jp/orangepicoshop/pico-a-079.html<br>
+https://store.shopping.yahoo.co.jp/orangepicoshop/pico-a-087.html<br>
 
