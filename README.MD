@@ -55,6 +55,10 @@ SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用し
 ![](photo/tiny_rtc_modules.png)
 ![](photo/tiny_rtc_modules互換品.png)
 
+<br>
+日時の設定は、ファームウェア起動時のセレクトリスト0番（TOD）で指定します。
+
+
 ## ３．グルー・ロジック
 SDカードアクセスの一部、割り込み、メモリアクセス関連の外部ロジックをCPLD（ATF16V8B）を使用して1chipにまとめてあります。
 使用するために、jedファイルをATF16V8Bに書き込む必要があります。
