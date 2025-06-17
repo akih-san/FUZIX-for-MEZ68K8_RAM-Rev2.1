@@ -127,7 +127,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 　を使っています。[MPLAB X IDE v6.25](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide)コンパイラは、XC8を使用しています。<br>
 
 <br>
-・universal moniter 68000、及びEnhanced 68k BASICは、[Macro Assembler AS V1.42](http://john.ccac.rwth-aachen.de:8000/as/)を
+・universal moniter 68000、及びEnhanced 68k BASICは、[Macro Assembler AS V1.42](http://john.ccac.rwth-aachen.de:8000/as) を
 　使用してバイナリを作成しています。<br>
 <br>
 ・FatFsはR0.15を使用しています。<br>
