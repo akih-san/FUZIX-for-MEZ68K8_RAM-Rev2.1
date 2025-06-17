@@ -171,7 +171,7 @@ FUZIX/Kernrl/platformフォルダの下にplatform-mez68k-ramフォルダをコ�
  - `TARGET ?= zrc　　-->  TARGET ?= mez68k-ram`<br>
 
 ## 5. FUZIXフォルダ下でMakeする
- - `$ cd FUZIX<br>
+ - `$ cd FUZIX`<br>
  - `~/FUZIX$ make`　　（少々時間がかかります。）<br>
  - `~/FUZIX$ make diskimage`<br>
 
