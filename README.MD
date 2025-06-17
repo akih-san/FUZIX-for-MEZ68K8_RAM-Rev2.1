@@ -117,10 +117,9 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 [FUZIX](https://www.fuzix.org/)の移植をLinuxで行います。Windows10/11であれば、WSLを使えば問題なく移植できる？のではないでしょうか。
 私の場合は、raspberrypi 5を開発環境として使用しました。
 
-## m68k-elf-gcc
+## 1. m68k-elf-gcc
 68000版の移植にはm68k-elf-gccが必要です。
 私は[ここ](https://github.com/andwn/marsdev/releases)から入手しました。
-手順としては、
 GitHubからクローンして：
  - `git clone https://github.com/andwn/marsdev`
  - `cd marsdev`
