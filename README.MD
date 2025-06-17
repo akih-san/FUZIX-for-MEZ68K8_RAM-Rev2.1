@@ -144,10 +144,27 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
 （日本語ファイルREADME-ja.mdがありますので、参照してください）<br>
 
 ## 2. FUZIX 0.5をgit
- - `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
+[FUZIXをビルドしてみよう【0.4版】](https://cwaweb.bai.ne.jp/~ohishi/zakki/buildFUZIX.htm)を参考にしました。分かりやすく解説されています。<br>
+ビルドに必要なパッケージも解説されていますので、足りないものはインストールが必要です。
+- GCC (C/C++)
+- byacc
+- flex
+- boost-devel (libboost-dev)
+- makeinfo (texinfo)
+- git
+- zlib (zlib1g-dev)
+　byaccについては次の後処理が必要とのこと。
+- sudo update-alternatives --set yacc /usr/bin/byacc
+
+
+
+- `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
  - `cd FUZIX/`<br>
 
-し、platform-mez68k-ramフォルダをコピーする
+
+
+
+
 
 # その他のツール
 ・FWのソースのコンパイルは、マイクロチップ社の「MPLAB® X Integrated Development Environment (IDE)」を使っています。<br>
