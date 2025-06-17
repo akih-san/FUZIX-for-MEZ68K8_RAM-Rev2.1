@@ -20,6 +20,8 @@ PICから、レガシーCPUのメモリ空間にアクセスすることで、�
 （EMUZ80、MEZ68K8_RAM、RTCモジュール、SDカードモジュール）
 ![](photo/P1030046.JPG)<br>
 
+（動作中のMEZ68K8_RAM Rev2.1）
+![](photo/P1030054.JPG)<br>
 
 MEZ68K8_RAM Rev2.1の[FUZIX](https://www.fuzix.org/)は、platform-[pico68k](https://hackaday.io/project/179200-68000-minimal-homebrew-computer)をベースにポーティングを行いました。
 
