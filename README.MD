@@ -125,8 +125,15 @@ GitHubからクローンして：
  - `cd marsdev`
 
 makeに、いくつかパッケージが必要となりますので、無ければインストールする必要があります。<br>
-`ubuntu: build-essential texinfo wget`<br>
+　`ubuntu: build-essential texinfo wget`<br>
  - `apt install build-essential texinfo wget`
+ - `make m68k-toolchain`
+　　（PCのCPUパワーに依存しますが、makeに少々時間がかかります。）<br>
+ - `sudo make install`
+　　デフォルトだと/opt/toolchains/marsにm68k-elf-gccの環境が作られます。<br>
+　　PATHを通せば、使用可能となります。.bashrc等に設定すればOK<br>
+ - `export PATH="$PATH:/opt/toolchains/mars/m68k-elf/bin"`
+
 
 （日本語ファイルREADME-ja.mdがありますので、参照してください）
 
