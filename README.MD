@@ -145,16 +145,16 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
 
 ## 2. FUZIX 0.5をgit
 [FUZIXをビルドしてみよう【0.4版】](https://cwaweb.bai.ne.jp/~ohishi/zakki/buildFUZIX.htm)を参考にしました。分かりやすく解説されています。<br>
-ビルドに必要なパッケージも解説されていますので、足りないものはインストールが必要です。
-- GCC (C/C++)
-- byacc
-- flex
-- boost-devel (libboost-dev)
-- makeinfo (texinfo)
-- git
-- zlib (zlib1g-dev)
-　byaccについては次の後処理が必要とのこと。
-- sudo update-alternatives --set yacc /usr/bin/byacc
+ビルドに必要なパッケージも解説されていますので、足りないものはインストールが必要です。<br>
+- GCC (C/C++)<br>
+- byacc<br>
+- flex<br>
+- boost-devel (libboost-dev)<br>
+- makeinfo (texinfo)<br>
+- git<br>
+- zlib (zlib1g-dev)<br>
+　byaccについては次の後処理が必要とのこと。<br>
+- sudo update-alternatives --set yacc /usr/bin/byacc<br>
 
 
 
