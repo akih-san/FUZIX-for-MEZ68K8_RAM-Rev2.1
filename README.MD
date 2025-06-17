@@ -108,7 +108,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
 
 # 図面、部品表、PICピンアサイン、Gerberデータ
-![](pdf/MEZ68K8_RAM_R2.1図面.pdf)
+## 1.![](pdf/MEZ68K8_RAM_R2.1図面.pdf)
 
 
 # ソースコードからFUZIX 05をビルドする
