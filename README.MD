@@ -108,8 +108,10 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
 
 # 図面、部品表、PICピンアサイン、Gerberデータ
-## 1.![](pdf/MEZ68K8_RAM_R2.1図面.pdf)
-
+  - [図面](https://github.com/akih-san/FUZIX-for-MEZ68K8_RAM-Rev2.1/blob/main/pdf/MEZ68K8_RAM_R2.1%E5%9B%B3%E9%9D%A2.pdf)
+  - [部品表](https://github.com/akih-san/FUZIX-for-MEZ68K8_RAM-Rev2.1/blob/main/pdf/MEZ68K8_RAM_R2.1%E9%83%A8%E5%93%81%E8%A1%A8.pdf)
+  - [PICピンアサイン](https://github.com/akih-san/FUZIX-for-MEZ68K8_RAM-Rev2.1/blob/main/pdf/MEZ68K8_RAM%20v2.1%EF%BC%88PIC%E3%83%94%E3%83%B3%E3%82%A2%E3%82%B5%E3%82%A4%E3%83%B3%EF%BC%89.pdf)
+  - [Gerberデータ](https://github.com/akih-san/FUZIX-for-MEZ68K8_RAM-Rev2.1/tree/main/MEZ68K8_RAM_R2.1_gerber)
 
 # ソースコードからFUZIX 05をビルドする
 [FUZIX](https://www.fuzix.org/)の移植はLinuxで行います。68000版の移植にはm68k-elf-gccが必要です。
