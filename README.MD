@@ -157,7 +157,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
 　・`sudo update-alternatives --set yacc /usr/bin/byacc`<br>
 <br>
 準備ができたら、FUZIXをgitします。<br>
-　- `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
+ - `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
 <br>
 
 ## 3. platformにmez68k-ramを追加する
