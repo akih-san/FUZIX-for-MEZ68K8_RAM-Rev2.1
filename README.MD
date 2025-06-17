@@ -159,10 +159,9 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
 準備ができたら、FUZIXをgitします。<br>
 　- `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
 <br>
-FUZIX/Kernrl/platformフォルダの下にplatform-mez68k-ramフォルダをコピーします。<br>
-　- `cp -r platform-mez68k-ram FUZIX/Kernrl/platform`<br>
-（カレントフォルダは構築する環境によって異なるはずなので、記述は省略しています）
-
+カレントディレクトリにFUZIXとFUZIX-for-MEZ68K8_RAM-Rev2.1をgitしていると仮定してます。<br>
+~/FUZIX/Kernrl/platformフォルダの下にplatform-mez68k-ramフォルダをコピーします。<br>
+　- `cp -r ~/FUZIX-for-MEZ68K8_RAM-Rev2.1/platform-mez68k-ram ~/FUZIX/Kernrl/platform`<br>
 
 
 
