@@ -131,7 +131,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
 [Macro Assembler AS V1.42](http://john.ccac.rwth-aachen)
 
-[Macro Assembler AS V1.42](http://john.ccac.rwth-aachen.de:8000/as) を
+[Macro Assembler AS V1.42](http://john.ccac.rwth-aachen.de:8000/as/) を
 
 使用してバイナリを作成しています。<br>
 <br>
