@@ -116,3 +116,23 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 # ソースコードからFUZIX 05をビルドする
 [FUZIX](https://www.fuzix.org/)の移植はLinuxで行います。68000版の移植にはm68k-elf-gccが必要です。
 
+
+
+
+# その他のツール
+・FWのソースのコンパイルは、マイクロチップ社の<br>
+<br>
+　「MPLAB® X Integrated Development Environment (IDE)」<br>
+<br>
+　を使っています。（MPLAB X IDE v6.20）コンパイラは、XC8を使用しています。<br>
+（https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide）<br>
+<br>
+・universal moniter 68000、及びEnhanced 68k BASICは、Macro Assembler AS V1.42を<br>
+　使用してバイナリを作成しています。<br>
+　ここから（http://john.ccac.rwth-aachen.de:8000/as/） 入手できます。<br>
+<br>
+・FatFsはR0.15を使用しています。<br>
+　＜FatFs - Generic FAT Filesystem Module＞<br>
+　http://elm-chan.org/fsw/ff/00index_e.html<br>
+<br>
+
