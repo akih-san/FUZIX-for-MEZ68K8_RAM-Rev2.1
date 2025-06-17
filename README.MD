@@ -118,8 +118,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 私の場合は、raspberrypi 5を開発環境として使用しました。
 
 ## 1. m68k-elf-gcc
-68000版の移植にはm68k-elf-gccが必要です。
-私は[ここ](https://github.com/andwn/marsdev/releases)から入手しました。
+68000版の移植にはm68k-elf-gccが必要です。私は[ここ](https://github.com/andwn/marsdev/releases)から入手しました。<br>
 GitHubからクローンして：
  - `git clone https://github.com/andwn/marsdev`
  - `cd marsdev`
@@ -133,11 +132,24 @@ makeに、いくつかパッケージが必要となりますので、無けれ�
 　　デフォルトだと/opt/toolchains/marsにm68k-elf-gccの環境が作られます。<br>
 　　PATHを通せば、使用可能となります。.bashrc等に設定すればOK<br>
  - `export PATH="$PATH:/opt/toolchains/mars/m68k-elf/bin"`<br>
+<br>
+以下のようにバージョンが表示されればＯＫ<br>
+> m68k-elf-gcc --version<br>
+m68k-elf-gcc (GCC) 14.2.0<br>
+Copyright (C) 2024 Free Software Foundation, Inc.<br>
+This is free software; see the source for copying conditions.  There is NO<br>
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
+><br>
+
+<br>
+（日本語ファイルREADME-ja.mdがありますので、参照してください）<br>
 
 
-（日本語ファイルREADME-ja.mdがありますので、参照してください）
-
-
+m68k-elf-gcc --version
+m68k-elf-gcc (GCC) 14.2.0
+Copyright (C) 2024 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 
