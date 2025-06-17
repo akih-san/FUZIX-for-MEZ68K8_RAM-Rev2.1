@@ -120,7 +120,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
 
 # その他のツール
-・FWのソースのコンパイルは、マイクロチップ社の「MPLAB® X Integrated Development Environment (IDE)」を使っています。
+・FWのソースのコンパイルは、マイクロチップ社の「MPLAB® X Integrated Development Environment (IDE)」を使っています。<br>
 　[MPLAB X IDE v6.25](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide)コンパイラは、XC8を使用しています。<br>
 
 <br>
