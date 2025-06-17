@@ -107,7 +107,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 ・UMON_68K.BIN	（ユニバーサルモニタ）
 
 
-#　図面、部品表
+# 図面、部品表、PICピンアサイン、Gerberデータ
 ![](pdf/MEZ68K8_RAM_R2.1図面.pdf)
 
 
