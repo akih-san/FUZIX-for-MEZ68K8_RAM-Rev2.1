@@ -140,18 +140,14 @@ Copyright (C) 2024 Free Software Foundation, Inc.<br>
 This is free software; see the source for copying conditions.  There is NO<br>
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
 ><br>
-
 <br>
 （日本語ファイルREADME-ja.mdがありますので、参照してください）<br>
 
+## 2. FUZIX 0.5をgit
+ - `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
+ - `cd FUZIX/`<br>
 
-m68k-elf-gcc --version
-m68k-elf-gcc (GCC) 14.2.0
-Copyright (C) 2024 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-
+し、platform-mez68k-ramフォルダをコピーする
 
 # その他のツール
 ・FWのソースのコンパイルは、マイクロチップ社の「MPLAB® X Integrated Development Environment (IDE)」を使っています。<br>
