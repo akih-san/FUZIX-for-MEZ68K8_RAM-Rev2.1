@@ -139,12 +139,9 @@ makeに、いくつかパッケージが必要となりますので、無けれ�
  - `export PATH="$PATH:/opt/toolchains/mars/m68k-elf/bin"`<br>
 <br>
 以下のようにバージョンが表示されればＯＫ<br>
-> m68k-elf-gcc --version<br>
-m68k-elf-gcc (GCC) 14.2.0<br>
-Copyright (C) 2024 Free Software Foundation, Inc.<br>
-This is free software; see the source for copying conditions.  There is NO<br>
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
-><br>
+
+![](gcc_ver.png)
+
 <br>
 （日本語ファイルREADME-ja.mdがありますので、参照してください）<br>
 
