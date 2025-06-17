@@ -146,20 +146,22 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.<br>
 ## 2. FUZIX 0.5をgit
 [FUZIXをビルドしてみよう【0.4版】](https://cwaweb.bai.ne.jp/~ohishi/zakki/buildFUZIX.htm)を参考にしました。分かりやすく解説されています。<br>
 ビルドに必要なパッケージも解説されていますので、足りないものはインストールが必要です。<br>
-・`GCC (C/C++)`<br>
-・`byacc`<br>
-・`flex`<br>
-・`boost-devel (libboost-dev)`<br>
-・`makeinfo (texinfo)`<br>
-・`git`<br>
-・`zlib (zlib1g-dev)`<br>
-　byaccについては次の後処理が必要とのこと。<br>
-・`sudo update-alternatives --set yacc /usr/bin/byacc`<br>
-
-
-
-- `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
- - `cd FUZIX/`<br>
+　・`GCC (C/C++)`<br>
+　・`byacc`<br>
+　・`flex`<br>
+　・`boost-devel (libboost-dev)`<br>
+　・`makeinfo (texinfo)`<br>
+　・`git`<br>
+　・`zlib (zlib1g-dev)`<br>
+　　　byaccについては次の後処理が必要とのこと。<br>
+　・`sudo update-alternatives --set yacc /usr/bin/byacc`<br>
+<br>
+準備ができたら、FUZIXをgitします。<br>
+　- `git clone https://github.com/EtchedPixels/FUZIX.git`<br>
+<br>
+FUZIX/Kernrl/platformフォルダの下にplatform-mez68k-ramフォルダをコピーします。<br>
+　- `cp -r platform-mez68k-ram FUZIX/Kernrl/platform`<br>
+（カレントフォルダは構築する環境によって異なるはずなので、記述は省略しています）
 
 
 
