@@ -125,8 +125,8 @@ GitHubからクローンして：
  - `cd marsdev`
 
 makeに、いくつかパッケージが必要となりますので、無ければインストールする必要があります。<br>
-`ubuntu: build-essential texinfo wget`
-`apt install build-essential texinfo wget`
+`ubuntu: build-essential texinfo wget`<br>
+ - `apt install build-essential texinfo wget`
 
 （日本語ファイルREADME-ja.mdがありますので、参照してください）
 
