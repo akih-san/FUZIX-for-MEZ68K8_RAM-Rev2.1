@@ -170,9 +170,10 @@ FUZIX/Kernrl/platformフォルダの下にplatform-mez68k-ramフォルダをコ�
 次に、~/FUZIX/Makefileを編集し、ターゲットにmez68k-ramを指定します。<br>
  - `TARGET ?= zrc　　-->  TARGET ?= mez68k-ram`<br>
 
-## 5. Makeする
- - `> make　　（少々時間がかかります。）`<br>
- - `> make diskimage`<br>
+## 5. FUZIXフォルダ下でMakeする
+ - `$ cd FUZIX<br>
+ - `~/FUZIX$ make`　　（少々時間がかかります。）<br>
+ - `~/FUZIX$ make diskimage`<br>
 
 ## 6. 作成されるファイル
  - FUZIX/Images/mez68k-ramフォルダの下に、DISK.IMG<br>
