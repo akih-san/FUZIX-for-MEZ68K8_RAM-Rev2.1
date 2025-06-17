@@ -106,6 +106,11 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 ・BASIC68K.BIN	（スタンドアロン版BASIC）<br>
 ・UMON_68K.BIN	（ユニバーサルモニタ）
 
+#　図面、部品表
+
+![](pdf/
+
+
 # ソースコードからFUZIX 05をビルドする
 [FUZIX](https://www.fuzix.org/)の移植はLinuxで行います。68000版の移植にはm68k-elf-gccが必要です。
 
