@@ -88,7 +88,7 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 - PICkit3（または互換ツール）<br><br>
   PICkitminus書き込みソフトを用いて、書き込むことが出来ます。以下で入手できます。<br>
 
-  - [PICkitminus](http://kair.us/projects/pickitminus/)
+  - [PICkitminus](https://github.com/jaka-fi/PICkitminus)
 
 ## ２．CPLDへの書き込み
 
