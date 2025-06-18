@@ -51,9 +51,11 @@ Tiny RTC moduleはArduinoで使用可能で、[AliExpress](https://ja.aliexpress
 することができます。また、安価な互換品が出回っています。テストでは互換品を使いましたが、特に問題なく使用できました。
 SQピン端子は未使用です。SCL、SDA、VCC、GNDの４ピンを使用しています。
 
-
+(tiny_rtc_modules)<br>
 ![](photo/tiny_rtc_modules.png)
-![](photo/tiny_rtc_modules互換品.png)
+
+(tiny_rtc_modules互換品.png)<br>
+![](photo/tiny_rtc_modules互換品.png)<br>
 
 <br>
 日時の設定は、ファームウェア起動時のセレクトリスト0番（TOD）で指定します。<br>
