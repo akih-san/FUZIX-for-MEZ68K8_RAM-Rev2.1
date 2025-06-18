@@ -92,9 +92,10 @@ EMUZ80ボードから、メザニンボード（MEZ68K8_RAM Rev2.1）を外し�
 
 ## ２．CPLDへの書き込み
 
-   CPLDには、ROMライタを使用してG16V8B/MEZ68K8_RAM2.1.jedファイルを書込みます。<br>
-   使用したのは、XGecu Programmer Model TL866Ⅱ PLUSです。<br>
-   少し古いですが、問題なく書き込みが出来ました。XGecu Official Siteは[こちら](https://xgecu.myshopify.com/)<br>
+　　CPLDには、ROMライタを使用してG16V8B/MEZ68K8_RAM2.1.jedファイルを書込みます。<br>
+　　使用したのは、XGecu Programmer Model TL866Ⅱ PLUSです。<br>
+　　少し古いですが、問題なく書き込みが出来ました。XGecu Official Siteは[こちら](https://xgecu.myshopify.com/)<br>
+　　ソフトウェアのダウンロードは[こちら](http://www.xgecu.com/en/Download.html?refreshed=1750208080997)<br>
 
    ![](photo/ROM_WRITER.JPG)<br>
 （今回使用したROMライタ）
