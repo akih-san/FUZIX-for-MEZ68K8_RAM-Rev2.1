@@ -196,7 +196,17 @@ FUZIX/Kernrl/platformフォルダの下にplatform-mez68k-ramフォルダをコ�
  - FUZIX/Images/mez68k-ramフォルダの下に、DISK.IMG<br>
  - FUZIX/Kernelフォルダの下に、FUZIX.BIN<br>
  - FUZIX/Kernrl/platform/platform-mez68k-ramフォルダの下に、MON.BIN<br>
+<br>
 
+# 余談
+/usr/binにviとvileが入ってますが、正常に動きません。何か設定が必要なのかもしれませんが、よく分からないです。
+viクローンとして、FUZIX/Applications/leveeがありますが、makeで収録しません。個別にmakeしたところ、
+m68k-elf-gcc Ver.14.2ではエラーでmake出来ませんでした。戻り値を返さないルートがある関数があってはじかれているようです。
+しかし、Ver.6.3の[m68k-elf-gcc](https://github.com/kentosama/m68k-elf-gcc)でmakeしたところワーニングにはなりますが、
+バイナリが作成されました。動かしてみると、levee-ansiはTera Term上で動くようです。ま、不具合があるかもしれませんが、
+バイナリをアップしておくことにします。
+DISK.IMGへの組み込みは、[PC版UCP[(https://www.rad51.net/jeans/index.php?itemid=957)を使うと便利です。
+<br>
 
 # その他のツール
 ・FWのソースのコンパイルは、マイクロチップ社の「MPLAB® X Integrated Development Environment (IDE)」を使っています。<br>
