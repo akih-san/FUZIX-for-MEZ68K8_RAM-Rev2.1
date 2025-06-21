@@ -1,0 +1,28 @@
+＜参考：UCPツール＞
+https://www.rad51.net/jeans/index.php?itemid=957
+
+＜UCPの起動＞
+./ucp DISK.IMG:1048576
+
+UCP commands:
+?|help
+exit|quit
+dir|ls [path]
+cd path
+mkdir dirname
+mknod name mode dev#
+chmod mode path
+[b]get sourcefile [destfile]
+[b]put uzifile
+type|cat filename
+dump filename
+rm path
+rmdir dirname
+df
+ln sourcefile destfile
+
+これらの命令の中では、「get」と「put」が特殊な物で、この機能のためにucpが用意されています。
+「get」は、Fuzixディスクイメージに新規ファイルを取り込む機能、
+「put」はディスクイメージからファイルを取り出す機能です。
+
+getしたファイルはモードが「666」なので、実行型ファイルの場合は「chmod」を使って「755」に変更します。
