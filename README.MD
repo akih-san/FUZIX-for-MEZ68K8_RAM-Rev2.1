@@ -205,7 +205,7 @@ m68k-elf-gcc Ver.14.2ではエラーでmake出来ませんでした。戻り値�
 しかし、Ver.6.3の[m68k-elf-gcc](https://github.com/kentosama/m68k-elf-gcc)でmakeしたところワーニングにはなりますが、
 バイナリが作成されました。動かしてみると、levee-ansiはTera Term上で動くようです。ま、不具合があるかもしれませんが、
 バイナリをアップしておくことにします。
-DISK.IMGへの組み込みは、[PC版UCP[(https://www.rad51.net/jeans/index.php?itemid=957)を使うと便利です。
+DISK.IMGへの組み込みは、[PC版UCP](https://www.rad51.net/jeans/index.php?itemid=957)を使うと便利です。
 <br>
 
 # その他のツール
