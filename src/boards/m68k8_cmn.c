@@ -152,16 +152,20 @@ void __interrupt(irq(U3RX),base(8)) URT3Rx_ISR(){
 
 	rx_data = U3RXB;			// get rx data
 
-	if ( irq_flg && rx_data == CTL_Q ) {
+	if ( irq_flg && ctlq_ev == CTL_Q && rx_data == CTL_Q ) {
 		nmi_sig = 1;
 		rx_wp = 0;
 		rx_rp = 0;
 		rx_cnt = 0;
+		ctlq_ev = 0;
 	}
-	else if (rx_cnt < U3B_SIZE) {
-		rx_buf[rx_wp] = rx_data;
-		rx_wp = (rx_wp + 1) & (U3B_SIZE - 1);
-		rx_cnt++;
+	else {
+		ctlq_ev = (uint8_t)rx_data;
+		if (rx_cnt < U3B_SIZE) {
+			rx_buf[rx_wp] = rx_data;
+			rx_wp = (rx_wp + 1) & (U3B_SIZE - 1);
+			rx_cnt++;
+		}
 	}
 }
 
