@@ -31,6 +31,7 @@ static FIL rom_fl;
 //uint16_t os_flg;	// 0:CP/M 1:FUZIX
 uint16_t time_dev;	// 0:Timer0, 1:DS1307
 uint8_t	nmi_sig;	// NMI request flag
+uint8_t ctlq_ev;
 uint8_t	irq_flg;	// irq flag
 uint8_t tmp_buf[2][TMP_BUF_SIZE];
 #define BUF_SIZE TMP_BUF_SIZE * 2
@@ -72,6 +73,7 @@ void main(void)
 
 	irq_flg = 0;
 	nmi_sig = 0;	// clear NMI request flag
+	ctlq_ev = 0;	// clear CTL+Q event
 	sys_init();
 	setup_sd();
 

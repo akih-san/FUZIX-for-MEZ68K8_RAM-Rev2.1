@@ -300,6 +300,7 @@ extern TPB tim_pb;					// TIME device parameter block
 extern uint8_t rtc[7];				//// DS1307 low data
 extern uint16_t time_dev;			// 0:Timer0, 1:DS1307
 
+extern uint8_t ctlq_ev;
 extern uint8_t nmi_sig;				// NMI request flag
 extern uint8_t irq_flg;				// irq flag
 
